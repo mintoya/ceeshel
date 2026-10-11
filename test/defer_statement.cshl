@@ -1,0 +1,7 @@
+num ~@sint(32)=0;
+{
+  defer {num = num * 3;};
+  num = num + 5;
+};
+
+num == 15;

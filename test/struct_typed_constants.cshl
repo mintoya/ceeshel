@@ -1,0 +1,15 @@
+enum ~~ @struct {
+  a ~ @sint(32) ~ 0;
+  b ~ @sint(32) ~ a + 1;
+  c ~ @sint(32) ~ b + 1;
+};
+mixed ~~ @struct {
+  constant ~ @sint(32) ~ 7;
+  value ~ @sint(32);
+};
+x ~ mixed;
+x.value = 9;
+(@sizeof(enum) == 0) and
+(enum.a == 0) and (enum.b == 1) and (enum.c == 2) and
+@iscomptime(enum.b) and
+(@sizeof(mixed) == 4) and (mixed.constant == 7) and (x.value == 9);

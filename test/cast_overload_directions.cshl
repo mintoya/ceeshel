@@ -1,0 +1,30 @@
+i32 ~~ @sint(32);
+Source ~~ @struct { value ~i32; };
+Target ~~ @struct {
+  Self ~~ @this();
+  value ~i32;
+  @id("=") ~~ @fn (self ~@refT(Self), other ~@any()), @void(), {
+    self.value = other.value;
+  };
+};
+source ~Source; source.value = 37;
+make_target ~~ @fn (input ~Source), Target, { return input; };
+read_target ~~ @fn (input ~Target), i32, { return input.value; };
+returned ~= make_target(source);
+explicit ~= source as Target;
+
+From ~~ @struct {
+  Self ~~ @this();
+  value ~i32;
+  @id("as") ~~ @fn (self ~Self, target ~@type()), i32, {
+    return self.value + 5;
+  };
+};
+from ~From; from.value = 7;
+return_int ~~ @fn (input ~From), i32, { return input; };
+read_int ~~ @fn (input ~i32), i32, { return input; };
+assigned ~i32 = from;
+
+(returned.value == 37) and (explicit.value == 37) and (read_target(source) == 37)
+  and (return_int(from) == 12) and (read_int(from) == 12)
+  and (assigned == 12) and ((from as i32) == 12);

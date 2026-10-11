@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+f ~~ fn (x~i32, amount~int, y~i32, T~type, z~T) T {
+  return (x + y + z + amount) as T;
+};
+selected ~~ specialize(f(0, 7, 0, i32, 0));
+p ~fnptr (i32,i32,i32) i32 = selected;
+p(10, 20, 5) == 42;

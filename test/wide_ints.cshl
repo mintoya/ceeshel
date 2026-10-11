@@ -1,0 +1,5 @@
+big ~@sint(40903) = 1 shl 40901;
+
+(big == ( 1 shl 40901 ) and
+((( big as @uint(40903) shl 1)as @sint(40903)) < 0) and
+(@sizeof(@typeof(big)) == 5113));

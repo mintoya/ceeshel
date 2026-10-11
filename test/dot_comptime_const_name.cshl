@@ -1,0 +1,21 @@
+type ~~ @type();
+ast ~~ @ast();
+i32 ~type~ @sint(32);
+Point ~type~ @struct{
+  Self ~type~ @this();
+  x ~i32;
+  y ~i32;
+  // `.` is overloadable, so reaching a field from inside the overload means asking for it raw
+  @id(".") ~~ @fn (this~@refT(Self) ,l~ast),@refT(i32),{
+    // binding a comptime string with `~~` marks it const; that must not stop the
+    // array from being readable as the raw name
+    xname ~~ "x";
+    yname ~~ "y";
+    @cif((l == "x"),(return @ref(@rawget(this, xname))));
+    @cif((l == "y"),(return @ref(@rawget(this, yname))));
+  };
+};
+a ~Point;
+a.x = 6;
+a.y = 5;
+(a.x == 6) and (a.y == 5);

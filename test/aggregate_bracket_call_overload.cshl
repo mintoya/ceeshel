@@ -1,0 +1,7 @@
+S ~~ @struct {
+  Self ~~ @this();
+  base ~@sint(32);
+  @id("()") ~~ @fn((self ~Self, n ~@sint(32)), @sint(32), { return self.base + n; });
+};
+x ~S; x.base = 7;
+(@compiles(x[3]) == (0 as @bool())) and (x(4) == 11);

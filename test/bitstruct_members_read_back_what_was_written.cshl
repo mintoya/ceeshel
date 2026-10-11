@@ -1,0 +1,22 @@
+type ~~ @type();
+u8 ~~ @uint(8);
+
+// a member is written and read back as its own bits: 3 + 5 bits is one byte
+B ~type~ @bitstruct{
+  a ~u8:3;
+  b ~u8:5;
+};
+
+x ~B;
+x.a = 5;
+x.b = 17;
+
+// and both ends of the range fit their members
+y ~B;
+y.a = 7;
+y.b = 31;
+
+(x.a == 5)
+  and (x.b == 17)
+  and (y.a == 7)
+  and (y.b == 31);

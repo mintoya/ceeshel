@@ -1,0 +1,18 @@
+type ~~ @type();
+u3 ~~ @uint(3);
+s5 ~~ @sint(5);
+s9 ~~ @sint(9);
+u17 ~~ @uint(17);
+
+pos ~u3 = 7;
+neg ~s9 = 0 - 1;
+six ~s5 = 0 - 6;
+big ~u17 = 65535;
+
+// widening keeps the value, narrowing takes the low bits and re-reads the sign
+((pos as s5) == 7)
+  and ((neg as s5) == (0 - 1))
+  and ((neg as u3) == 7)
+  and ((six as u3) == 2)
+  and ((big as s9) == (0 - 1))
+  and ((big as u3) == 7);

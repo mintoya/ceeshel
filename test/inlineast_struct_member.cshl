@@ -1,0 +1,11 @@
+a ~ @struct{
+  i~@sint(32);
+  geti ~~ @fn (self~@ast()),@inlineast(),{
+    return @qot {
+      this ~~ @uqot(self);
+      this.i;
+    };
+  };
+};
+a.i = 5;
+a:geti() == 5;

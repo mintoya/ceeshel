@@ -1,0 +1,8 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/print.cshl";
+@using @import @path "enumlib/slice.cshl";
+
+// compile time execution, slice requires no runtime stuff
+si32 ~ @comptime slice(i8) = "hello world";
+
+si32.len ==  11;

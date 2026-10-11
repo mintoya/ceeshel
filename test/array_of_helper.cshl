@@ -1,0 +1,10 @@
+@using @import @path("module.cshl");
+a ~arr(3) i32;
+b ~arr(0) i32;
+x ~i32 = 7;
+cif (not array_of(i32,@typeof(a))) @compileError();
+cif (not array_of(i32,@typeof(b))) @compileError();
+cif (not array_of(i8,@typeof("hello"))) @compileError();
+cif (array_of(i8,@typeof(a))) @compileError();
+cif (array_of(i32,@typeof(x))) @compileError();
+true as bool;

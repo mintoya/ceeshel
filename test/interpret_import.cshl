@@ -1,0 +1,2 @@
+lib ~= @import(@path("import_dep.cshl"));
+lib.add(2, 3) == 5;

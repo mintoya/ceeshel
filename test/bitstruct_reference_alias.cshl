@@ -1,0 +1,15 @@
+type ~~ @type();
+u8 ~~ @uint(8);
+B ~type~ @bitstruct { a ~u8:3; b ~u8:5; };
+x ~B;
+x.a = 5;
+x.b = 17;
+// Generic parameters preserve the passed reference; inferred declarations copy values.
+update ~~ @fn (r ~@any()), @bool(), {
+  r = 6;
+  copy ~u8 = r;
+  copy = 1;
+  return copy == 1;
+};
+copy_ok ~@bool() = update(@ref(x.a));
+(x.a == 6) and (x.b == 17) and copy_ok;

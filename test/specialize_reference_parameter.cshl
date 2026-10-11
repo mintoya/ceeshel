@@ -1,0 +1,8 @@
+@using @import @path "enumlib/module.cshl";
+set ~~ fn (T~type, value~@reft(T)) void { value = 42; };
+x ~i32 = 0;
+y ~i32 = 0;
+selected ~~ specialize(set(i32, @ref x));
+p ~fnptr (@reft(i32)) void = selected;
+p(@ref y);
+(x == 0) and (y == 42) and not(@compiles(@specialize(set(i32, 0))));

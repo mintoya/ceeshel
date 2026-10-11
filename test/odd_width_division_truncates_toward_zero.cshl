@@ -1,0 +1,15 @@
+type ~~ @type();
+u9 ~~ @uint(9);
+s9 ~~ @sint(9);
+
+q ~u9 = 500;
+r ~u9 = 7;
+n ~s9 = 0 - 200;
+m ~s9 = 7;
+
+// the quotient and remainder stay in the operand's odd width, and a negative
+// dividend keeps the remainder's sign
+((q / r) == 71)
+  and ((q % r) == 3)
+  and ((n / m) == (0 - 28))
+  and ((n % m) == (0 - 4));

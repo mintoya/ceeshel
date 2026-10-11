@@ -1,0 +1,17 @@
+B ~~ @bitstruct { a ~@volatile(@uint(8)):3; b ~@uint(8):5; };
+b ~B;
+b.b = 17;
+b.a = 5;
+b.a = b.a + 1;
+S ~~ @struct { x ~@volatile(@uint(65)); };
+s ~S;
+s.x = 18446744073709551616;
+s.x = s.x + 3;
+a ~@volatile(@arr(2, @sint(32)));
+a[0] = 11;
+a[1] = 13;
+copy ~= a;
+a[0] = 19;
+(b.a == 6) and (b.b == 17)
+  and (s.x == 18446744073709551619)
+  and (copy[0] == 11) and (copy[1] == 13) and (a[0] == 19);

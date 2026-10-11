@@ -1,0 +1,11 @@
+type ~~ @type();
+i32 ~type~ @sint(32);
+arr ~~ @fn((i ~@int()), @any(), {
+  return @fn((T ~type), type, {
+    return @arr(i, T);
+  });
+});
+five ~~ arr(5);
+a ~five(i32);
+b ~arr(3) i32;
+(five(i32) == @arr(5, i32)) and ((arr(3) i32) == @arr(3, i32));

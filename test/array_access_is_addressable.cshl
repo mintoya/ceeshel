@@ -1,0 +1,7 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+A ~type~ @arr(3, s32);
+x ~A;
+p ~(@ptr s32)~ @where x[1];
+@at p = 9;
+(x[1] - 9) == 0;

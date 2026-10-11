@@ -1,0 +1,26 @@
+i32 ~~ @sint(32);
+ast ~~ @ast();
+inline ~~ @inlineast();
+fn ~~ @fn (a~ast), inline, {
+  return @qot @fn(@uqot(a."()".opleft),
+    @uqot(a."()".opright."()".opleft),
+    @uqot(a."()".opright."()".opright));
+};
+// The as signature must declare the destination type, not inline.
+(@compiles({
+effects ~i32 = 0;
+Source ~~ @struct {
+  Self ~~ @this();
+  value ~i32;
+  @id("as") ~~ fn (self~ast, target~@type()) inline {
+    return @qot {
+      effects = effects + 1;
+      @uqot(self).value + (5 as i32);
+    };
+  };
+};
+source ~Source;
+source.value = 12;
+result ~= source as i32;
+(result == 17) and (effects == 1);
+}) == (0 as @bool()));

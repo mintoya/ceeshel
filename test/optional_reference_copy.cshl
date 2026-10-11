@@ -1,0 +1,21 @@
+@using(@import @path("module.cshl"));
+OptionalRef ~~ @struct {
+  Self ~~ @this();
+  present ~bool;
+  value ~@refT(i8);
+  @id("=") ~~ fn (self ~@refT(Self), other ~any) void {
+    cif (@typeof(other) == Self) {
+      self.present = other.present;
+      if (other.present) (self.value = other.value);
+    } else {
+      self.value = other;
+      self.present = true;
+    };
+  };
+};
+x ~i8 = 7;
+first ~OptionalRef = @ref x;
+second ~OptionalRef = first;
+third ~OptionalRef = second;
+third.value |> { _ = 42; };
+(x == 42) and (first.value == 42) and (second.value == 42);

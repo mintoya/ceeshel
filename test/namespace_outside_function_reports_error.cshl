@@ -1,0 +1,14 @@
+// A struct produced by a function reports that function through
+// `@typeinfo(...).struct.namespace.fn`. A struct declared at file scope has no
+// enclosing function, so asking its namespace for `.fn` is rejected instead of
+// reporting the file's own top level as the origin.
+type ~~ @type();
+s32 ~~ @sint(32);
+
+mk ~~ @fn (), @type(), { return @struct{ k ~s32~ 5; }; };
+inner ~~ mk();
+file_scope ~type~ @struct{ k ~s32~ 5; };
+
+(@typeinfo(inner).struct.namespace.fn.0 == @typeinfo(mk).fn.0)
+  and (@compiles(@typeinfo(file_scope).struct.namespace.fn.0) == 0)
+  and (@compiles(@typeinfo(file_scope).struct.namespace.fn.1) == 0);

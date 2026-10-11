@@ -1,0 +1,13 @@
+@using @import @path("module.cshl");
+@cinclude "<stdio.h>";
+File ~~ @ctype("FILE");
+Time ~~ @ctype("struct tm");
+@cinclude "<time.h>";
+get_file ~~ fn () ((@ptr File)) @cout "return NULL;";
+get_time ~~ fn () ((@ptr Time)) @cout "return NULL;";
+get_file_pointer ~ @fnptr((), (@ptr File)) = get_file;
+f ~ ((@ptr File)) = get_file_pointer();
+t ~ ((@ptr Time)) = get_time();
+check ~~ fn (f~(@ptr File), t~(@ptr Time)) bool
+  @cout "return arg0 == NULL && arg1 == NULL;";
+check(f, t);

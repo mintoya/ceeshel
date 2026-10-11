@@ -1,0 +1,17 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+adder ~type~ @struct{
+  Self ~type~ @this();
+  captured ~ s32;
+  @id("()") ~~ @fn (self ~Self, extra ~s32), s32, {
+    base ~s32 = self.captured;
+    return base + extra;
+  };
+};
+make ~~ @fn (start ~s32), adder, {
+  c ~adder;
+  c.captured = start;
+  return c;
+};
+add5 ~adder = make(5);
+add5(2) == 7;

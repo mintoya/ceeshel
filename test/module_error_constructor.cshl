@@ -1,0 +1,5 @@
+@using @import @path "enumlib/module.cshl";
+message ~arr(4) i8 = "oops";
+from_array ~error_t = error(message);
+from_pointer ~error_t = error(@where message[0]);
+((@at from_array.emsg) == "o"[0]) and ((@at from_pointer.emsg) == "o"[0]);

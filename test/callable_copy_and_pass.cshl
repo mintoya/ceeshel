@@ -1,0 +1,15 @@
+@using @import @path "enumlib/module.cshl";
+Callable ~~ callable (i32) i32;
+plus_one ~~ fn (value~i32) i32 return value + 1;
+plus_two ~~ fn (value~i32) i32 return value + 2;
+p ~fnptr (i32) i32 = plus_one;
+a ~Callable = p;
+b ~Callable = a;
+p = plus_two;
+c ~Callable = p;
+apply ~~ fn (callback~Callable, value~i32) i32 return callback(value);
+copy ~~ fn (callback~Callable) Callable return callback;
+d ~Callable = copy(b);
+a = c;
+(a(40) == 42) and (b(41) == 42) and (d(41) == 42) and
+(apply(b, 10) == 11) and (apply(c, 10) == 12);

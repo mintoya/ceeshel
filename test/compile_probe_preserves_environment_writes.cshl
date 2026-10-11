@@ -1,0 +1,5 @@
+failed ~~ @compiles({
+  @_Env_set("probe", "retained", 17);
+  @compileError();
+});
+(failed == 0) and (@_Env_get("probe", "retained") == 17);

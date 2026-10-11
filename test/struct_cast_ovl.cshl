@@ -1,0 +1,12 @@
+type ~~ @type();
+vec2 ~type~ @struct{
+  Self ~type~ @this();
+  x ~ @sint(32);
+  y ~ @sint(32);
+  // the return type is the dependent type parameter, and the body branches on it
+  @id("as") ~~ @fn (self~Self,to ~type),to,{
+    @cif (to == (@sint(8))),{ return (self.x) + (self.y); };
+  };
+};
+a ~vec2; a.x = 1; a.y = 2;
+a as (@sint(8)) == 3 as (@sint(8));

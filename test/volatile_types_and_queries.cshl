@@ -1,0 +1,14 @@
+i32 ~~ @sint(32);
+V ~~ @volatile(i32);
+x ~V = 5;
+y ~@const(@comptime(V)) = 7;
+z ~@volatile(@const(@comptime(i32))) = 9;
+(@sizeof(V) == 4) and (@alignof(V) == 4)
+  and (V == @volatile(i32)) and (V != i32)
+  and (@ptr(V) != @ptr(i32))
+  and (@typeof(x) == V) and (@typeof(y) == V) and (@typeof(z) == V)
+  and @isconst(y) and @iscomptime(y)
+  and (@isconst(x) == 0) and (@iscomptime(x) == 0)
+  and (@compiles(@volatile()) == 0)
+  and (@compiles(@volatile(i32, i32)) == 0)
+  and (@compiles(@volatile(5)) == 0);

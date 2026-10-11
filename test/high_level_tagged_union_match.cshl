@@ -1,0 +1,30 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/enum_tag.cshl";
+
+// Tags, union storage, constructors, and match are generated in user space.
+ints ~~ enum_tag u8 [i8:i8, i16:i16, i32:i32];
+score ~~ fn (value~ints) i32 {
+  return value:match([
+    i32 |> _ + 3,
+    i8 |> (_ as i32) + 1,
+    i16 |> (_ as i32) + 2,
+  ]);
+};
+a ~= ints.i8(41);
+b ~= ints.i16(40);
+c ~= ints.i32(39);
+copy ~= b;
+b = a;
+calls ~i32 = 0;
+next ~~ fn () ints { calls = calls + 1; return ints.i32(7); };
+once ~i32 = next():match[
+  i8  |> _ as i32,
+  i16 |> _ as i32,
+  i32 |> _ + 1,
+];
+(score(a) == 42) and (score(copy) == 42) and (score(c) == 42)
+  and (score(b) == 42) and (a.tag == 0) and (copy.tag == 1) and (c.tag == 2)
+  and (once == 8) and (calls == 1)
+  and (@compiles(a:match([i8 |> _, i16 |> _])) == false)
+  and (@compiles(a:match([i8 |> _, i8 |> _, i32 |> _])) == false)
+  and (@compiles(a:match([i8 |> _, i16 |> _, unknown |> _])) == false);

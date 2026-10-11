@@ -1,0 +1,18 @@
+@using @import @path("module.cshl");
+
+i ~i32 = 0;
+and_count ~i32 = 0;
+or_count ~i32 = 0;
+and_calls ~i32 = 0;
+or_calls ~i32 = 0;
+while (i < 4) {
+  if ((i < 2) and { and_calls = and_calls + 1; true; })
+    (and_count = and_count + 1);
+  if ((i >= 2) or { or_calls = or_calls + 1; false; })
+    (or_count = or_count + 1);
+  i = i + 1;
+};
+
+ok ~= (and_count == 2) and (or_count == 2)
+  and (and_calls == 2) and (or_calls == 2);
+ok;

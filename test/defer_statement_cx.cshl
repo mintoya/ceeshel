@@ -1,0 +1,9 @@
+num ~@sint(32)=0;
+{
+  nx ~@refT(@typeof(num)) = @ref num;
+  defer {nx = nx * 3;};
+  @unbind("nx");
+  num = num + 5;
+};
+
+num == 15;

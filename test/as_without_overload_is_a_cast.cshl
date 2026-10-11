@@ -1,0 +1,5 @@
+type ~~ @type();
+s8 ~~ @sint(8);
+s32 ~~ @sint(32);
+x ~s8 = 5;
+x as s32 == 5;

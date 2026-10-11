@@ -1,0 +1,5 @@
+S ~~ @struct {
+  field ~@sint(32);
+  owner ~~ @fn((), @type(), { return @this(); });
+};
+(S.owner() == S) and (@sizeof(S.owner()) == 4);

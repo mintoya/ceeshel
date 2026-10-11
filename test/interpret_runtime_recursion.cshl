@@ -1,0 +1,7 @@
+sum ~~ @fn((n ~@sint(32)),@sint(32),{
+  @if(n <= 0, { zero ~ @sint(32) = 0; return zero; });
+  rest ~ @sint(32) = sum(n - 1);
+  total ~ @sint(32) = n + rest;
+  return total;
+});
+sum(4) == 10;

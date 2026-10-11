@@ -1,0 +1,23 @@
+i32 ~~ @sint(32);
+ast ~~ @ast();
+inline ~~ @inlineast();
+fn ~~ @fn (a~ast), inline, {
+  return @qot @fn(@uqot(a."()".opleft),
+    @uqot(a."()".opright."()".opleft),
+    @uqot(a."()".opright."()".opright));
+};
+effects ~i32 = 0;
+Box ~~ @struct {
+  value ~i32;
+  @id("+") ~~ fn (left~ast, right~ast) inline {
+    return @qot { effects = effects + 1; "arbitrary"; };
+  };
+  @id("()") ~~ fn (self~ast) inline return @qot("call");
+  @id("=") ~~ fn (self~ast, other~ast) inline {
+    return @qot { @uqot(self).value = @uqot(other); "discarded result"; };
+  };
+};
+a ~Box;
+a = 17;
+result ~= a + 3;
+(result == "arbitrary") and (a() == "call") and (a.value == 17) and (effects == 1);

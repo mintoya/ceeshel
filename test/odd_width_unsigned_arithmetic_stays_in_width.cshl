@@ -1,0 +1,16 @@
+type ~~ @type();
+u3 ~~ @uint(3);
+
+a ~u3 = 5;
+b ~u3 = 7;
+
+// every operation stays inside the three declared bits
+((a + b) == 4)
+  and ((b + 1) == 0)
+  and ((b * 2) == 6)
+  and ((a - 6) == 7)
+  and ((a band b) == 5)
+  and ((a bor b) == 7)
+  and ((a bxor b) == 2)
+  and ((a shl 2) == 4)
+  and ((b shr 1) == 3);

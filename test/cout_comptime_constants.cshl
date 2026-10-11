@@ -1,0 +1,17 @@
+yes ~@comptime(@bool())~ 1;
+no ~@comptime(@bool())~ 0;
+number ~@comptime(@sint(32))~ 37;
+wide ~@comptime(@uint(65))~ 18446744073709551616;
+check ~~ @fn((input ~@bool()), @bool(), {
+  value ~@bool() = no;
+  @if(input, { value = yes; });
+  S ~~ @struct { flag ~@bool(); };
+  s ~S;
+  s.flag = yes;
+  had_flag ~@bool() = s.flag;
+  s.flag = no;
+  n ~@sint(32) = number;
+  w ~@uint(65) = wide;
+  return value and had_flag and (s.flag == no) and (n == 37) and (w == wide);
+});
+check(yes) and (check(no) == no);

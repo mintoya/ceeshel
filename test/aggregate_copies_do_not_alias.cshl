@@ -1,0 +1,8 @@
+P ~~ @struct { x ~@sint(32); };
+A ~~ @arr(2, P);
+a ~A; a[0].x = 7; a[1].x = 9;
+b ~= a;
+b[0].x = 11;
+copy ~~ @fn((input ~A), A, { input[1].x = 13; return input; });
+c ~= copy(a);
+(a[0].x == 7) and (a[1].x == 9) and (b[0].x == 11) and (c[1].x == 13);

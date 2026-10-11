@@ -1,0 +1,14 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+u32 ~~ @uint(32);
+
+// every member of a union starts at offset 0, so writing one is reading the others
+U ~type~ @union{ wide ~s32; word ~u32; };
+
+u ~U;
+u.word = 0x01020304;
+(@sizeof(U) == 4)
+  and (@alignof(U) == 4)
+  and (@offsetof(U, wide) == 0)
+  and (@offsetof(U, word) == 0)
+  and (u.wide == 0x01020304);

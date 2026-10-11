@@ -1,0 +1,285 @@
+type ~~ @type();
+ast  ~~ @ast();
+any  ~~ @any();
+int ~~ @int();
+inline ~~ @inlineast();
+i8  ~~ @sint 8;
+i16 ~~ @sint 16;
+i32 ~~ @sint 32;
+i64 ~~ @sint 64;
+u8  ~~ @uint 8;
+u16 ~~ @uint 16;
+u32 ~~ @uint 32;
+u64 ~~ @uint 64;
+bool ~~ @bool();
+true ~@comptime(bool)~1;
+false~@comptime(bool)~0;
+null ~ @struct{nothing~bool;};
+void ~~ @void();
+fn  ~~ @fn (a ~ast),inline,{
+  return 
+    @qot @fn(
+      @uqot(a."()".opleft),
+      @uqot(a."()".opright."()".opleft),
+      @uqot(a."()".opright."()".opright),
+    );
+};
+bfn ~~ fn (block~ast) any 
+  return @uqot fn (a~any) any {a|>@uqot(block);};
+np ~~ fn (block~ast) inline {
+  argn ~ast~block."()".opleft.pblock[0];
+  body ~ast~block."()".opright;
+  return @qot {
+    @uqot(argn) ~= _;
+    @unbind "_";
+    @uqot(body);
+  };
+};
+@ast_len ~~ @fn (a~ast),int,{
+  result ~=0;
+  @cwhile(a[result], result = result + 1);
+  return result;
+};
+
+@closure ~~ @fn (caps ~ast, args ~ast, ret ~ast, body ~ast),@inlineast(),{
+  make_structItem ~~ @fn (in~ast),ast,{
+   @cif(in.decl, {
+      @cif(not(in.decl.value),@compileError());
+      @cif(not(in.decl.name),@compileError());
+      atype ~ast;
+      @cif(in.decl.type,
+        atype = in.decl.type,
+        atype = @qot(@refT @typeof @uqot(in.decl.value)),
+      );
+      return @qot(@uqot(in.decl.name)~@uqot(atype));
+   }, @cif(in.id, {
+        atype ~ast~ @qot(@refT @typeof @uqot(in.id));
+        return @qot(@uqot(in)~@uqot(atype));
+   },@compileError()));
+  };
+  retrieve_structItem ~~ @fn (in~ast),ast,{
+   aname ~ast;
+   @cif(in.decl, {
+     aname = in.name;
+   }, @cif(in.id, {
+     aname = in.id;
+   },@compileError()));
+   return @qot(@uqot(aname) ~= @uqot(@ast_op(".", @qot(self), aname)));
+  };
+  set_structItem ~~ @fn (in~ast),ast,{
+   aname ~ast;
+   oname ~ast;
+   @cif(in.decl, {
+     aname = in.name;
+     oname = in.value;
+   }, @cif(in.id, {
+     aname = in.id;
+     oname = aname;
+   },@compileError()));
+   return @ast_op( "=",
+     @ast_op(".", @qot(result), aname),
+     oname
+   );
+  };
+  return @qot {
+    result ~ @uqot @qot @struct {
+      Self~~@this();
+      @splice @apply(make_structItem,caps);
+      @id("()") ~~ @fn(
+        (self ~Self,@splice(args)),
+        @uqot(ret), {
+          @splice @apply(retrieve_structItem,caps);
+          @uqot(body);
+        });
+    };
+    @splice @apply(set_structItem,caps);
+    result;
+  };
+};
+closure ~~ fn (a ~ast) inline {
+  return 
+    @qot @closure(
+      @uqot(a."()".opleft),
+      @uqot(a."()".opright."()".opleft),
+      @uqot(a."()".opright."()".opright."()".opleft),
+      @uqot(a."()".opright."()".opright."()".opright),
+    );
+};
+
+if  ~~ fn (a ~ast) inline {
+  call ~ast~ a."()";
+  cond ~ast~ call.opleft;
+  rest ~ast~ call.opright;
+
+  @cif((rest."()".opright."()".opleft == "else"), {
+    then ~ast~ rest.opleft;
+    else ~ast~ rest.opright."()".opright;
+
+    return @qot @if(
+      @uqot(cond),
+      @uqot(then),
+      @uqot(else)
+    );
+  });
+
+  return @qot @if(
+    @uqot(cond),
+    @uqot(rest)
+  );
+};
+cif  ~~ fn (a ~ast) inline {
+  call ~ast~ a."()";
+  cond ~ast~ call.opleft;
+  rest ~ast~ call.opright;
+
+  @cif((rest."()".opright."()".opleft == "else"), {
+    then ~ast~ rest.opleft;
+    else ~ast~ rest.opright."()".opright;
+
+    return @qot @cif(
+      @uqot(cond),
+      @uqot(then),
+      @uqot(else)
+    );
+  });
+
+  return @qot @cif(
+    @uqot(cond),
+    @uqot(rest)
+  );
+};
+while ~~ fn (a ~ast) inline {
+  @cif (a."()"), { 
+    cond ~ast~ a."()".opleft;
+    body ~ast~ a."()".opright;
+    return @qot @loop{
+      @if (@uqot(cond)),
+        (@uqot(body)),
+        (break());
+    };
+  },{
+    return @qot @loop{
+      @if (@uqot(a)),
+        (0),
+        (break());
+    };
+  };
+};
+cwhile ~~ fn (a ~ast) inline {
+  cond ~ast~ a."()".opleft;
+  body ~ast~ a."()".opright;
+  return @qot @cwhile(@uqot(cond), @uqot(body));
+};
+not ~~ fn (in ~bool) bool return in as bool bxor 1;
+some_state ~= @sint(32);
+getstate ~~ fn () (@typeof(some_state)) 
+  return (some_state = some_state + 1);
+arr ~~ fn (i~int) any 
+  return (fn (T~type) type 
+    return (@arr(i,T)));
+specialize ~~ fn (call~ast) inline return @qot @specialize(@uqot(call));
+int_str ~~ fn (i~int) any {
+  cif i != 0 {
+    o ~~ int_str(i / 10);
+    ol ~~@typeinfo(@typeof(o)).array.len;
+    r~ @comptime arr(ol + 1) i8;
+    {
+      i~=0;
+      cwhile (i < ol) {
+        r[i] = o[i];
+        i = i + 1;
+      };
+    };
+    r[ol] = ( i % 10 ) + "0"[0];
+    return r;
+  } else {
+    r~ @comptime arr(0) i8;
+    return r;
+  };
+};
+? ~~ fn (t~type) type return @struct {
+    Self ~~ @this();
+    isnnull  ~bool;
+    value    ~t;
+    @id("as") ~~ fn (this~Self , t~type) t {
+      cif (t == bool) {
+        return this.isnnull; 
+      } else cif (t == Self) {
+        return this;
+      } else unbound_thing(); // not bound to anything, regular unbound id
+    };
+    @id("=") ~~ fn (this~@refT(Self) , o~any) void {
+      cif (@typeof(o) == t) {
+        this.isnnull = true;
+        this.value = o;
+      } else cif (@typeof(o) == Self) {
+        this = o;
+      } else @error();
+
+    };
+    unwrap ~~ fn (this~ @refT(Self)) (@refT t) {
+      if (not this.isnnull) {}; // do something
+      return @ref this.value; 
+    };
+    orelse ~~ fn (this~ast , a~ast) inline {
+      return @qot {
+        self ~= @uqot(this);
+        result ~ @typeof(self.value);
+        if self (result = self.value)
+        else (result = @uqot a);
+        result;
+      };
+    };
+};
+array_of ~~ fn (T~type, A~type) (@comptime bool) {
+  info ~~ @typeinfo(A).array;
+  cif (not info) { return false; }
+  else { return info.elem == T; };
+};
+came_from ~~ fn (a~type ,b ~any) (@comptime bool ) {
+  tia ~~ @typeinfo(a);
+  tib ~~ @typeinfo(b);
+  cif (not tia.struct) { return false; }
+  else cif (not tib.fn) { return false; }
+  else {return tia.struct.namespace.fn.0 == tib.fn.0;};
+};
+
+// something like ccall printf((@where "%i\n"[0]),5) as void;
+// ccall ~~ fn () any {};
+@struct{
+  inline  ~~ inline;
+  bool  ~~ bool;
+  type  ~~ type;
+  ast ~~ ast ;
+  any ~~ any ;
+  int ~~ int;
+  i8  ~~ i8;
+  i16 ~~ i16;
+  i32 ~~ i32;
+  i64 ~~ i64;
+  u8  ~~ u8;
+  u16 ~~ u16;
+  u32 ~~ u32;
+  u64 ~~ u64;
+  void  ~~ void;
+  getstate ~~ getstate;
+
+  fn ~~ fn;
+  closure ~~ closure;
+  if ~~ if;
+  while ~~ while;
+  cwhile ~~ cwhile;
+  cif ~~ cif;
+  arr ~~ arr;
+  specialize ~~ specialize;
+  ? ~~ ?;
+  true  ~~ true;
+  false ~~ false;
+  not ~~ not;
+
+  bfn ~~ bfn;
+  came_from ~~ came_from;
+  array_of ~~ array_of;
+  @ast_len ~~ @ast_len;
+  int_str ~~ int_str ;
+};

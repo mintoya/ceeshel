@@ -1,0 +1,18 @@
+a ~~ @qot [1,2,3];
+b ~~ @qot (1,2,3);
+c ~~ @qot {1;2;3;};
+aslice ~~ a[1,2];
+bslice ~~ b[1,2];
+cslice ~~ c[1,2];
+aempty ~~ a[0,0];
+bempty ~~ b[3,3];
+cempty ~~ c[1,1];
+(@uqot(aslice.ablock[0]) == 2)
+  and (@uqot(bslice.pblock[0]) == 2)
+  and (@uqot(cslice.bblock[0]) == 2)
+  and (@typeof(aempty.ablock) == @ast())
+  and (@typeof(bempty.pblock) == @ast())
+  and (@typeof(cempty.bblock) == @ast())
+  and ((aempty.pblock as @bool()) == 0)
+  and ((bempty.bblock as @bool()) == 0)
+  and ((cempty.ablock as @bool()) == 0);

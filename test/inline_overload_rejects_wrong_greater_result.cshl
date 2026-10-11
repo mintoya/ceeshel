@@ -1,0 +1,14 @@
+i32 ~~ @sint(32);
+ast ~~ @ast();
+inline ~~ @inlineast();
+fn ~~ @fn (a~ast), inline, {
+  return @qot @fn(@uqot(a."()".opleft),
+    @uqot(a."()".opright."()".opleft),
+    @uqot(a."()".opright."()".opright));
+};
+Bad ~~ @struct {
+  field ~i32;
+  @id(">") ~~ fn (left~ast, right~ast) inline return @qot(1);
+};
+value ~Bad;
+(@compiles(value > value) == (0 as @bool()));

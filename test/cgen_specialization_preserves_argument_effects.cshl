@@ -1,0 +1,6 @@
+i32 ~~ @sint(32);
+x ~i32;
+bump ~~ @fn((), i32, { x = x + 1; return x; });
+join ~~ @fn((T ~@type(), a ~T, b ~T), T, { return a * 10 + b; });
+result ~i32 = join(i32, bump(), bump());
+(result == 12) and (x == 2);

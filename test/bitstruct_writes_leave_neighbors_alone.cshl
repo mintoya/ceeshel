@@ -1,0 +1,20 @@
+type ~~ @type();
+u8 ~~ @uint(8);
+
+B ~type~ @bitstruct{
+  a ~u8:2;
+  b ~u8:3;
+  c ~u8:3;
+};
+
+x ~B;
+x.a = 3;
+x.b = 5;
+x.c = 6;
+
+// rewriting the middle member leaves the bits of its neighbors alone
+x.b = 2;
+
+(x.a == 3)
+  and (x.b == 2)
+  and (x.c == 6);

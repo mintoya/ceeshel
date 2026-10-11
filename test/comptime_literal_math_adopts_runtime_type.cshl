@@ -1,0 +1,4 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+x ~s32 = 4;
+(@typeof(3 + x) == s32) and ((3 + x) == 7);

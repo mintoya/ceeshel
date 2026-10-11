@@ -1,0 +1,8 @@
+@using @import @path "enumlib/module.cshl";
+@_Env_set("specialize-argument-count", 0);
+f ~~ fn (width~int, value~@sint(width)) (@sint(width)) return value;
+selected ~~ specialize(f({
+  @_Env_set("specialize-argument-count", @_Env_get("specialize-argument-count") + 1);
+  32;
+}, 0 as i32));
+(@_Env_get("specialize-argument-count") == 1) and (selected(42) == 42);

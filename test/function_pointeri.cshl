@@ -1,0 +1,12 @@
+gen  ~~ @fn((t~@type(),a~t),@typeof(a),{return a;});
+gen2 ~~ @fn((t~@type(),a~t),@typeof(a),{return a;});
+
+sp1 ~@fnptr((@sint(32)),@sint(32))=@specialize(gen(@sint(32), 0 as @sint(32)));
+sp2 ~@fnptr((@sint(32)),@sint(32))=@specialize(gen2(@sint(32), 0 as @sint(32)));
+{
+  temp ~~ sp1;
+  sp1 = sp2;
+  sp2 = temp;
+};
+
+(sp1(1) == 1) and (sp2(2) == 2);

@@ -1,0 +1,11 @@
+f ~~ @fn((T ~ @type()), T, {
+  {
+    @cif(@returntype() == T, { return 7; }, { return 0; });
+  };
+});
+outer ~~ @fn((), @sint(32), {
+  inner ~~ @fn((), @bool(), { return @returntype() == @bool(); });
+  @if(inner() and (@returntype() == @sint(32)), { return 9; });
+  return 0;
+});
+(f(@sint(8)) == 7) and (f(@sint(32)) == 7) and (outer() == 9);

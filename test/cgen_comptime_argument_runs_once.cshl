@@ -1,0 +1,7 @@
+@_Env_set("argument-count", 0);
+accept ~~ @fn((T ~@type()), @type(), { return T; });
+Result ~~ accept({
+  @_Env_set("argument-count", @_Env_get("argument-count") + 1);
+  @uint(8);
+});
+(@_Env_get("argument-count") == 1) and (Result == @uint(8));

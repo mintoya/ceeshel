@@ -1,0 +1,12 @@
+i32 ~~ @sint(32);
+x ~i32 = x + 7;
+Cell ~~ @struct {
+  value ~i32;
+  @id("=") ~~ @fn((self ~@ast(), other ~@ast()), @inlineast(), {
+    return @qot {
+      @uqot(self).value = (@ref(@uqot(self)) |> @uqot(other));
+    };
+  });
+};
+c ~Cell = _.value + 9;
+(x == 7) and (c.value == 9);

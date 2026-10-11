@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+zero ~~ int_str(0);
+positive ~~ int_str(12345);
+negative ~~ int_str(-678);
+joined ~~ arrcat("ab", "cd");
+(zero == "0") and (positive == "12345") and
+(negative == "-678") and (joined == "abcd");

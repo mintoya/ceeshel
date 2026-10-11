@@ -1,0 +1,4 @@
+old ~~ @_Env_get("shared", "value");
+@_Env_set("shared", "value", 42);
+@_Env_set("shared", "exports", @struct { answer ~~ old; });
+old;

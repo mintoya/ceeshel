@@ -1,0 +1,23 @@
+type ~~ @type();
+u8 ~~ @uint(8);
+
+// the members of a bitstruct share one run of bits, the first member at the low end
+B ~type~ @bitstruct{
+  a ~u8:3;
+  b ~u8:5;
+};
+// a union gives that run the byte it lives in, so the packing is visible
+U ~type~ @union{
+  bits ~B;
+  raw ~u8;
+};
+
+u ~U;
+u.bits.a = 5;
+u.bits.b = 17;
+
+// 17 shifted up by the 3 bits a takes, or 5
+(u.raw == 0b10001101)
+  and (u.bits.a == 5)
+  and (u.bits.b == 17)
+  and (@sizeof(U) == 1);

@@ -1,0 +1,41 @@
+u65 ~~ @uint(65);
+s128 ~~ @sint(128);
+
+// a value wider than any C integer is stored in exactly the bytes its declared
+// width rounds up to, so it can share storage with other members of a union
+U ~~ @union { wide ~u65; bytes ~@arr(9, @uint(8)); };
+v ~U;
+v.wide = 18446744073709551616;
+
+// a struct member of a wide type occupies the same declared bytes
+T ~~ @struct { x ~u65; };
+t ~T;
+t.x = 18446744073709551616;
+
+// and the member sits at the offset the language gives it, so the layout the
+// compiler reports is the layout the emitted C actually has
+S ~~ @struct { x ~u65; y ~@uint(8); };
+V ~~ @union { s ~S; bytes ~@arr(18, @uint(8)); };
+w ~V;
+w.s.x = 18446744073709551616;
+w.s.y = 7;
+
+// the high bits live in the high bytes, least significant byte first
+(v.bytes[0] == 0)
+  and (v.bytes[7] == 0)
+  and (v.bytes[8] == 1)
+  and (@sizeof(u65) == 9)
+  and (@sizeof(s128) == 16)
+  and (@sizeof(U) == 9)
+  and (@sizeof(T) == 9)
+  and (v.wide == 18446744073709551616)
+  and (t.x == 18446744073709551616)
+  and ((v.wide + 1) == 18446744073709551617)
+  and (@offsetof(S, x) == 0)
+  and (@offsetof(S, y) == 9)
+  and (@sizeof(S) == 18)
+  and (@sizeof(V) == 18)
+  and (w.bytes[0] == 0)
+  and (w.bytes[8] == 1)
+  and (w.bytes[9] == 7)
+  and (w.bytes[17] == 0);

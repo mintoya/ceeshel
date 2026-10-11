@@ -1,0 +1,16 @@
+@using @import @path "enumlib/module.cshl";
+Result ~~ !(i32);
+a ~Result = 17 as i32;
+b ~Result = a;
+success ~~ not(b.has_err) and (b.data.result == 17);
+message ~arr(4) i8 = "oops";
+e ~error_t;
+e.emsg = @where message[0];
+a = e;
+b = a;
+failed ~~ b.has_err and ((@at b.data.err.emsg) == "o"[0]);
+calls ~i32 = 0;
+recovered ~i32 = b:catch({ calls = calls + 1; 42; });
+a = 8 as i32;
+value ~i32 = a:catch({ calls = calls + 1; 99; });
+success and failed and (calls == 1) and (recovered == 42) and (value == 8);

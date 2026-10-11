@@ -1,0 +1,5 @@
+@using @import @path "enumlib/module.cshl";
+f ~~ fn (amount~@comptime(i32), value~i32) i32 return value + amount;
+selected ~~ specialize(f(7, 0));
+p ~fnptr (i32) i32 = selected;
+(p(35) == 42) and (selected(1) == 8);

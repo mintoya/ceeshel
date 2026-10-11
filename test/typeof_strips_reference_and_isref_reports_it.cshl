@@ -1,0 +1,29 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+i32 ~~ @sint(32);
+arr ~~ @fn((i ~@int()), @any(), {
+  return @fn((T ~type), type, {
+    return @arr(i, T);
+  });
+});
+
+counter ~s32 = 5;
+get ~~ @fn (), s32, { return 3; };
+refT ~type~ @refT(s32);
+five ~~ arr(5);
+row ~five(s32);
+
+// A referance *is* the variable it names, so @typeof answers "what does it
+// hold" and never hands back a referance. @isref is the other question, and it
+// is what tells a name (a place) apart from a call result (a value).
+(@typeof(counter) == s32)
+  and @isref(counter)
+  and ((@isref(get()) bxor 1) == 1)
+// A *type* written as a referance still is one: there the referance is part of
+// the type rather than a property of an expression, so it survives.
+  and (refT == @refT(s32))
+  and ((@isref(refT) bxor 1) == 1)
+// The point of stripping: measuring a place measures what it holds, so the row
+// below is 5 * 4 rather than the size of a pointer.
+  and (@sizeof(@typeof(row)) == 20)
+  and (@sizeof(@typeof(counter)) == 4);

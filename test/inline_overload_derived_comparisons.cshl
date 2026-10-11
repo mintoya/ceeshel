@@ -1,0 +1,31 @@
+i32 ~~ @sint(32);
+i8 ~~ @sint(8);
+bool ~~ @bool();
+ast ~~ @ast();
+inline ~~ @inlineast();
+fn ~~ @fn (a~ast), inline, {
+  return @qot @fn(@uqot(a."()".opleft),
+    @uqot(a."()".opright."()".opleft),
+    @uqot(a."()".opright."()".opright));
+};
+effects ~i32 = 0;
+Box ~~ @struct {
+  Self ~~ @this();
+  value ~i32;
+  @id(">") ~~ fn (left~Self, right~Self) bool {
+    effects = effects + 1; return left.value > right.value;
+  };
+  @id("==") ~~ fn (left~Self, right~Self) bool {
+    effects = effects + 1; return left.value == right.value;
+  };
+};
+a ~Box; a.value = 11;
+b ~Box; b.value = 16;
+r1 ~= a < b;
+r2 ~= b > a;
+r3 ~= a <= b;
+r4 ~= b >= a;
+r5 ~= a == a;
+r6 ~= a != b;
+
+r1 and r2 and r3 and r4 and r5 and r6 and (effects == 6);

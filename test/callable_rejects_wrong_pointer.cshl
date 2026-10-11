@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+Callable ~~ callable (i32) i32;
+f ~~ fn (value~i8) i8 return value;
+p ~fnptr (i8) i8 = f;
+not(@compiles({ callback ~Callable = p; })) and
+not(@compiles(p as Callable)) and
+not(@compiles({ callback ~Callable = 0; }));

@@ -1,0 +1,5 @@
+sum ~~ @fn((n ~@sint(32)), @sint(32), {
+  @if(n <= 0, { return 0; });
+  return n + sum(n - 1);
+});
+sum(20000) == 200010000;

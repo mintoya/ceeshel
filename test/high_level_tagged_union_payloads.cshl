@@ -1,0 +1,38 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/enum_tag.cshl";
+
+Message ~~ enum_tag u8 [
+  pair:(@struct { first ~i32; second ~i32; }),
+  bytes:(arr(3) u8),
+  empty:void,
+];
+// The payload need not have a named type outside the generated enum.
+pair ~@typeinfo(Message.Variants).struct.members[0].type;
+pair.first = 17;
+pair.second = 25;
+m ~= Message.pair(pair);
+pair.first = 99;
+copy ~= m;
+b ~arr(3) u8;
+b[0] = 10;
+b[1] = 20;
+b[2] = 12;
+m = Message.bytes(b);
+b[0] = 99;
+score ~~ fn (value~Message) i32 {
+  return value:match([
+    empty |> (0 as i32),
+    bytes |> (_[0] as i32) + (_[1] as i32) + (_[2] as i32),
+    pair |> _.first + _.second,
+  ]);
+};
+e ~= Message.empty({;});
+Other ~~ enum_tag u8 [only:i32];
+one ~= Other.only(42);
+(score(copy) == 42) and (score(m) == 42) and (score(e) == 0)
+  and (one:match([only |> _]) == 42)
+  and (Message != Other)
+  and (@compiles(enum_tag u8 []) == false)
+  and (@compiles(enum_tag u8 [same:i8, same:i16]) == false)
+  and (@compiles(enum_tag u8 [tag:i32]) == false)
+  and (@compiles(enum_tag @uint(1) [a:i8, b:i8, c:i8]) == false);

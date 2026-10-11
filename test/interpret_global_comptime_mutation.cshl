@@ -1,0 +1,10 @@
+asize ~= 1;
+type ~~ @type();
+increasing_array~~@fn((t~type),type,
+   return @arr { asize = asize + 1;},t );
+
+increasing_array @sint 8;               // array of 2 i8
+
+a3u16 ~type~ increasing_array @uint 16; // array of 3 u16
+
+a3u16 == @arr(3, @uint(16));

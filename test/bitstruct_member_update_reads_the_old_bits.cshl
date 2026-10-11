@@ -1,0 +1,21 @@
+type ~~ @type();
+u8 ~~ @uint(8);
+
+B ~type~ @bitstruct{
+  a ~u8:3;
+  b ~u8:5;
+};
+
+x ~B;
+x.a = 5;
+x.b = 17;
+
+// the read side of the update sees the member before the write
+x.a = x.a + 1;
+x.b = x.b + 1;
+
+// and a member can be written from another member of the same bitstruct
+x.b = x.b - x.a;
+
+(x.a == 6)
+  and (x.b == 12);

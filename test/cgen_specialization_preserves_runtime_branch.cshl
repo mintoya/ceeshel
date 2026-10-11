@@ -1,0 +1,9 @@
+i32 ~~ @sint(32);
+f ~~ @fn((T ~@type(), flag ~@bool(), x ~T), T, {
+  @if(flag, { return x + 2; }, { return x + 7; });
+});
+x ~i32 = 3;
+a ~i32 = f(i32, x == 3, x);
+x = 9;
+b ~i32 = f(i32, x == 3, x);
+(a == 5) and (b == 16);

@@ -1,0 +1,6 @@
+x ~@sint(32) = 37;
+p ~~ @where(@ref x);
+q ~~ p as @ptr(@arr(0, @sint(8)));
+r ~~ q as @ptr(@ptr(@sint(16)));
+s ~~ r as @ptr(@sint(32));
+@at(s) == 37;

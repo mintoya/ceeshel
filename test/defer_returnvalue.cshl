@@ -1,0 +1,59 @@
+seen ~@sint(32) = 0;
+void_exits ~@sint(32) = 0;
+inspect ~~ @fn((out ~@refT(@sint(32)), normal ~@refT(@sint(32)), which ~@sint(32)), @sint(32), {
+  value ~@sint(32) = 7;
+  defer {
+    @cif(@typeof(@returnvalue()) == @void(), {
+      normal = normal + 1;
+    }, {
+      out = @returnvalue();
+      value = 99;
+    });
+  };
+  @if(which == 0, { return value; });
+  @if(which == 1, { return value + 1; });
+  value = 12;
+  return value;
+});
+a ~= inspect(@ref(seen), @ref(void_exits), 0);
+first ~= seen;
+b ~= inspect(@ref(seen), @ref(void_exits), 1);
+second ~= seen;
+c ~= inspect(@ref(seen), @ref(void_exits), 2);
+third ~= seen;
+direct ~~ @fn((out ~@refT(@sint(32))), @any(), {
+  observer ~@refT(@sint(32)) = out;
+  defer { observer = @returnvalue(); };
+  @unbind("observer");
+  return (21 as @sint(32));
+});
+d ~= direct(@ref(seen));
+fourth ~= seen;
+ordered ~~ @fn((out ~@refT(@sint(32))), @sint(32), {
+  defer { defer { out = out * 10 + @returnvalue(); }; };
+  defer { out = 1; };
+  return 5;
+});
+e ~= ordered(@ref(seen));
+fifth ~= seen;
+empty ~~ @fn((normal ~@refT(@sint(32))), @void(), {
+  defer { @cif(@typeof(@returnvalue()) == @void(), { normal = normal + 1; }); };
+  return();
+});
+empty(@ref(void_exits));
+loops ~~ @fn((normal ~@refT(@sint(32))), @void(), {
+  i ~@sint(32) = 0;
+  @loop({
+    defer { @cif(@typeof(@returnvalue()) == @void(), { normal = normal + 1; }); };
+    i = i + 1;
+    @if(i < 2, { continue(); });
+    break();
+  });
+});
+loops(@ref(void_exits));
+{
+  defer { @cif(@typeof(@returnvalue()) == @void(), { void_exits = void_exits + 1; }); };
+};
+(a == 7) and (first == 7) and (b == 8) and (second == 8)
+and (c == 12) and (third == 12) and (d == 21) and (fourth == 21)
+and (e == 5) and (fifth == 15) and (void_exits == 4);

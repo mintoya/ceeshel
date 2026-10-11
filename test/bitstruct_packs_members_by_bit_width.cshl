@@ -1,0 +1,11 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+
+// 20 + 20 bits is 40 bits, a s32 pair would have taken 8 bytes
+B ~type~ @bitstruct{
+  a ~s32:20;
+  b ~s32:20;
+};
+
+(@sizeof(B) == 5)
+  and (@alignof(B) == 5);

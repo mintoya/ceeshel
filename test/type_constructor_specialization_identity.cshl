@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/slice.cshl";
+A ~~ slice(i8);
+B ~~ slice(i8);
+C ~~ slice(u8);
+(A == B) and (A != C)
+  and (@typeinfo(A).struct.namespace.fn.1 == @typeinfo(B).struct.namespace.fn.1);

@@ -1,0 +1,13 @@
+item ~@struct{
+  value ~ @uint(8);
+  @id("=") ~~ @fn((self~@ast(),other~@ast()),@inlineast(),{
+    return @qot{
+      @uqot(self).value = @struct{
+        a~~1;
+      }|> @uqot(other);
+    };
+  });
+};
+item = _.a;
+item.value;
+

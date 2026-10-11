@@ -1,0 +1,8 @@
+x ~@sint(32)~ 3;
+y ~@sint(32) = 4;
+@isconst({ x; })
+  and @isconst(@if(1, { x; }, { y; }))
+  and @isconst(5 as @const(@sint(32)))
+  and @if(@isconst(x + y), 0, 1)
+  and (@typeof({ x; }) == @sint(32))
+  and (@typeof(@sint(32)) == @type());

@@ -1,0 +1,22 @@
+@using @import @path "enumlib/module.cshl";
+calls ~i32 = 0;
+@_Env_set("specialize-runtime-argument-count", 0);
+bump ~~ fn () i32 {
+  calls = calls + 1;
+  return calls;
+};
+f ~~ fn (width~int, value~@sint(width)) (@sint(width)) {
+  calls = calls + 10;
+  return value + 1;
+};
+selected ~~ specialize(f(32, bump()));
+other ~~ specialize(f(32, {
+  @_Env_set("specialize-runtime-argument-count", 1);
+  calls = calls + 100;
+  0 as i32;
+}));
+before ~~ calls == 0;
+p ~fnptr (i32) i32 = selected;
+answer ~i32 = p(41);
+before and (calls == 10) and (answer == 42) and
+(@_Env_get("specialize-runtime-argument-count") == 0);

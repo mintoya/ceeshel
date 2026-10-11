@@ -1,0 +1,7 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+any ~~ @any();
+S ~type~ @struct { a ~s32; };
+mk ~~ @fn (), any, { s ~S; s.a = 5; return s; };
+use ~~ @fn (), s32, { return mk().a + 2; };
+use() == 7;

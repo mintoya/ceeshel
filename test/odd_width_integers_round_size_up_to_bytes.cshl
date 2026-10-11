@@ -1,0 +1,19 @@
+type ~~ @type();
+s3 ~~ @sint(3);
+u5 ~~ @uint(5);
+u7 ~~ @uint(7);
+s9 ~~ @sint(9);
+u9 ~~ @uint(9);
+s17 ~~ @sint(17);
+u33 ~~ @uint(33);
+u65 ~~ @uint(65);
+
+// a width that is not a whole number of bytes still occupies whole bytes
+(@sizeof(s3) == 1)
+  and (@sizeof(u5) == 1)
+  and (@sizeof(u7) == 1)
+  and (@sizeof(s9) == 2)
+  and (@sizeof(u9) == 2)
+  and (@sizeof(s17) == 3)
+  and (@sizeof(u33) == 5)
+  and (@sizeof(u65) == 9);

@@ -1,0 +1,39 @@
+@using @import @path("module.cshl");
+! ~~ fn (T ~type) type {
+  return @struct {
+    has_err ~bool;
+    data ~@union { err_text ~@ptr(i8); result ~T; };
+    catch ~~ fn (self ~ast, fallback ~ast) inline return @qot {
+      this ~~ @uqot(self);
+      value ~@typeof(this.data.result);
+      if this.has_err {
+        value = @uqot(fallback);
+      } else {
+        value = this.data.result;
+      };
+      value;
+    };
+  };
+};
+R ~~ ! i32;
+produce ~~ fn (calls ~@refT(i32), failed ~bool) R {
+  calls = calls + 1;
+  result ~R;
+  result.has_err = failed;
+  if failed {
+    result.data.err_text = @where "error"[0];
+  } else {
+    result.data.result = 17;
+  };
+  return result;
+};
+calls ~i32 = 0;
+fallbacks ~i32 = 0;
+failed ~i32 = produce(calls, true):catch { fallbacks = fallbacks + 1; 5; };
+passed ~i32 = produce(calls, false):catch { fallbacks = fallbacks + 1; 9; };
+void_result ~(! void);
+void_result.has_err = false;
+void_result:catch { fallbacks = fallbacks + 1; ; };
+void_result.has_err = true;
+void_result:catch { fallbacks = fallbacks + 1; ; };
+(failed == 5) and (passed == 17) and (calls == 2) and (fallbacks == 2);

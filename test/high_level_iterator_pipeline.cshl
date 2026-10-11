@@ -1,0 +1,22 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/iterator.cshl";
+
+// No intermediate arrays: each adapter stores the upstream iterator state.
+it ~= range(0, 10) |> filter((_ % 2) == 0) |> map(_ * _);
+sum ~i32 = 0;
+count ~i32 = 0;
+it |> each {
+  sum = sum + _;
+  count = count + 1;
+};
+empty ~= range(5, 5);
+empty |> each { count = count + 100; };
+// Copying iterator state makes an independent cursor.
+original ~= range(3, 6);
+copy ~= original;
+a ~= original:next();
+b ~= original:next();
+c ~= copy:next();
+(sum == 120) and (count == 5)
+  and not(it:next()) and not(empty:next())
+  and (a.value == 3) and (b.value == 4) and (c.value == 3);

@@ -1,0 +1,8 @@
+calls ~@sint(32) = 0;
+S ~~ @struct {
+  Self ~~ @this();
+  @id("()") ~~ @fn((self ~Self), @sint(32), { calls = calls + 1; return calls; });
+};
+x ~S;
+T ~~ @typeof(x());
+(T == @sint(32)) and (calls == 0) and (x() == 1) and (calls == 1);

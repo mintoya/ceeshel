@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+calls ~i32 = 0;
+a ~?(i32);
+missing ~i32 = a:orelse({ calls = calls + 1; 41; });
+a = 7;
+present ~i32 = a:orelse({ calls = calls + 1; 99; });
+(calls == 1) and (missing == 41) and (present == 7) and (a.value == 7);

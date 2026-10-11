@@ -1,0 +1,19 @@
+// This Collatz sequence reaches 966616035460, so its 949 steps require 64-bit integers.
+i64 ~~ @sint(64);
+outer ~~ @fn (run ~i64,in ~i64),i64,{
+  run = run + 1;
+
+  odd ~~ @fn (a ~i64,o ~i64),i64,
+    return(outer(a,o * 3 + 1));
+  even ~~ @fn (a ~i64,e ~i64),i64,
+    return(outer(a,e / 2));
+
+  resolve ~~ @fn (r ~i64,n ~i64),i64,{
+    @if((n == 1)  , (return r - 1));
+    @if((n band 1), (return odd(r,n)));
+    return even(r,n);
+  };
+  return resolve(run,in);
+};
+
+outer(0,63728127) == 949;

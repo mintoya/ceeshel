@@ -1,0 +1,4 @@
+x ~@sint(32) = 7;
+f ~~ @fn((), @sint(32), { return x; });
+g ~~ @fn((x ~@sint(32)), @sint(32), { return f(); });
+(g(99) == 7) and (x == 7);

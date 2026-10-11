@@ -1,0 +1,10 @@
+type ~~ @type();
+s32 ~~ @sint(32);
+counter ~s32 = 5;
+run ~~ @fn (), s32, {
+  p ~(@ptr s32) = @where counter;
+  v ~(@refT(s32))~ @at p;
+  counter = 9;
+  return v - 9;
+};
+run() == 0;

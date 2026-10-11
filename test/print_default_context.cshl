@@ -1,0 +1,7 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/slice.cshl";
+@using @import @path "enumlib/iterator.cshl";
+@using @import @path "enumlib/print.cshl";
+
+print["hi\n"];
+true;

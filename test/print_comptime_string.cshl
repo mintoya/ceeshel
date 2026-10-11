@@ -1,0 +1,30 @@
+@using @import @path "enumlib/module.cshl";
+@using @import @path "enumlib/slice.cshl";
+@using @import @path "enumlib/iterator.cshl";
+@using @import @path "enumlib/print.cshl";
+
+BufferContext ~~ @struct {
+  Self ~~ @this();
+  bytes ~arr(2) i8;
+  len ~u64;
+  put ~~ fn (self~@reft(Self), msg~any) void {
+    i ~u64 = 0;
+    cif @typeinfo(@typeof(msg)).array {
+      while (i < @typeinfo(@typeof(msg)).array.len) {
+        self.bytes[self.len] = msg[i];
+        self.len = self.len + 1;
+        i = i + 1;
+      };
+    } else {
+      while (i < msg.len) {
+        self.bytes[self.len] = msg:get(i);
+        self.len = self.len + 1;
+        i = i + 1;
+      };
+    };
+  };
+};
+
+output ~BufferContext;
+fmt[output, "%", "-6"];
+(output.len == 2) and (output.bytes == "-6");
