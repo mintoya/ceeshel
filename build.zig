@@ -9,6 +9,11 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
+    const args_dep = b.dependency("args", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "ceeshel",
         .root_module = b.createModule(.{
@@ -17,6 +22,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "ceeshel", .module = mod },
+                .{ .name = "args", .module = args_dep.module("args") },
             },
         }),
     });
