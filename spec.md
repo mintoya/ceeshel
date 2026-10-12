@@ -3,10 +3,6 @@
 CSHL has a small core, its syntax (§1) and a fixed set of `@` builtins (§3).
 Everything else is library code.
 
-Sections 1–4 describe the language contract. The current Zig executable parses
-source and prints its AST; evaluation, type checking, and C generation are not
-yet connected to that executable. Section 5 describes the implemented frontend.
-
 ## 1. Syntax
 
 ### Tokens
@@ -205,11 +201,11 @@ Explicit `as` converts between pointer types.
 
 ### Aggregates and layout
 
-- `@struct`: runtime members plus compile-time members, natural only
+- `@struct`: runtime members plus compile-time members
 - `@union`: runtime members only
 - `@arr(N, T)`: fixed length, `a[i]` access, zero length allowed.
 - `@sizeof`/`@alignof`/`@offsetof` inspect layout; a struct of only typed
-  constants has size zero, structs ithout members or ith size zero are stripped or replaced with void
+  constants has size zero.
 
 ### Functions and overloads
 

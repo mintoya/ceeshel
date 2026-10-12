@@ -12,7 +12,10 @@ slice ~~ fn (t~type) type return @struct{
     ra ~@reft(arr(0) t)~ @ref @at(self.ptr);
     return @ref ra[idx];
   };
-  @id("[]") ~~ fn (self~Self,idx~u64) (@reft t) return self:get(idx);
+  @id("[]") ~~ fn (self~Self,idx~ast) (@reft t) {
+    cif (idx.ablock[1]) @compileError();
+    return self:get(@uqot(idx.ablock[0]));
+  };
 
   @id("=") ~~ fn (self~RSelf, other~any) inline {
     cif (@typeof(other) == @typeof(self)) {
