@@ -104,7 +104,7 @@ as a value are rejected.
 | `@refT(T)` (alias `@reft`) | reference to `T` |
 | `@const T` `@comptime T` `@volatile T` | qualified `T` |
 | `@fnptr((T…), R)` | runtime function pointer |
-| `@struct {…}` `@union {…}` `@bitstruct {…}` | aggregate types |
+| `@struct {…}` `@union {…}` | aggregate types |
 | `@this()` | the enclosing aggregate |
 | `@fn(params, R, body)` | function; a parameter is `x ~T` or a bare type |
 
@@ -192,16 +192,12 @@ A variable expression is a place; `@ref`, `@where`, `@at` move between places,
 references, and pointers. Field and array-element access is addressable: writing
 one copies into it and does not alias the source, while reference members can hold
 aliases that survive a struct copy. Piping a reference place writes through it.
-References also have a fat form (pointer + offset) for bitstruct members, which has
-no ordinary address. Explicit `as` converts between pointer types.
+Explicit `as` converts between pointer types.
 
 ### Aggregates and layout
 
 - `@struct`: runtime members plus compile-time namespace members.
 - `@union`: runtime members all at offset 0; member initializers rejected.
-- `@bitstruct`: members `name ~Base : width`, packed least-significant-bit first
-  by declared width; size/alignment round the bit total up to bytes; writes
-  preserve neighbors and signed reads sign-extend.
 - `@arr(N, T)`: fixed length, `a[i]` access, zero length allowed.
 - `@sizeof`/`@alignof`/`@offsetof` inspect layout; a struct of only typed
   constants has size zero.

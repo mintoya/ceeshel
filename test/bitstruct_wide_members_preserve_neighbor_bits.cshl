@@ -1,7 +1,0 @@
-B ~~ @bitstruct { lo ~@uint(128):65; hi ~@uint(8):7; };
-U ~~ @union { bits ~B; bytes ~@arr(9, @uint(8)); };
-x ~U;
-x.bits.lo = 18446744073709551621;
-x.bits.hi = 3;
-(x.bits.lo == 18446744073709551621) and (x.bits.hi == 3)
- and (x.bytes[0] == 5) and (x.bytes[8] == 7) and (@sizeof(B) == 9);

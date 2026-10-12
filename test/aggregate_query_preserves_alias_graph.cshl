@@ -1,6 +1,6 @@
-U ~~ @union { raw ~@uint(8); bits ~@bitstruct { lo ~@uint(8):3; hi ~@uint(8):5; }; };
+U ~~ @union { raw ~@uint(8); alias ~@uint(8); };
 u ~U; u.raw = 141;
 p ~~ @where(u.raw);
 f ~~ @fn((), @uint(8), { @at(p) = 0; return u.raw; });
 T ~~ @typeof(f());
-(T == @uint(8)) and (u.raw == 141) and (u.bits.lo == 5) and (u.bits.hi == 17);
+(T == @uint(8)) and (u.raw == 141) and (u.alias == 141);

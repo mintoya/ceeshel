@@ -1,4 +1,4 @@
-B ~~ @bitstruct { a ~@volatile(@uint(8)):3; b ~@uint(8):5; };
+B ~~ @struct { a ~@volatile(@uint(8)); b ~@uint(8); };
 b ~B;
 b.b = 17;
 b.a = 5;
