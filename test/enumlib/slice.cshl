@@ -12,33 +12,19 @@ slice ~~ fn (t~type) type return @struct{
     ra ~@reft(arr(0) t)~ @ref @at(self.ptr);
     return @ref ra[idx];
   };
-  @id("=") ~~ fn (self~ast, other~ast) inline {
-    source ~~ @gensym(source);
-    return @qot {
-      cif (@typeof(@uqot(other)) == @typeof(@uqot(self))) {
-        @uqot(source) ~~ @uqot(other);
-        @uqot(self).ptr = @uqot(source).ptr;
-        @uqot(self).len = @uqot(source).len;
-      } else cif (
-        @typeinfo(@typeof(@uqot(other))).array
-        and (@typeinfo(@typeof(@uqot(other))).array.elem == @typeof((@at @uqot(self).ptr)[0]))
-      ) {
-        @uqot(self).ptr = (@where @ref (@uqot(other))[0]) as @typeof(@uqot(self).ptr);
-        @uqot(self).len = @typeinfo(@typeof(@uqot(other))).array.len;
-      } else @compileError();
-    };
-  };
-  @id("()") ~~ fn (self~ast,idx~ast) inline {
-    cif (
-        not(idx.ablock)
-        or not(idx.ablock[0])
-        or (idx.ablock[1])
-        ) @compileError(); // not bound to anything, so error is unbound id 
-    return @qot {
-      this ~~ @uqot(self);
-      idx_n ~u64~ @uqot(idx.ablock[0]);
-      @ref this:get(idx_n);
-    };
+  @id("[]") ~~ fn (self~Self,idx~u64) (@reft t) return self:get(idx);
+
+  @id("=") ~~ fn (self~RSelf, other~any) inline {
+    cif (@typeof(other) == @typeof(self)) {
+      self.ptr = other.ptr;
+      self.len = other.len;
+    } else cif (
+      @typeinfo(@typeof(other)).array
+      and (@typeinfo(@typeof(other)).array.elem == t)
+    ) {
+      self.ptr = (@where (other[0])) as @typeof(self.ptr);
+      self.len = @typeinfo(@typeof(other)).array.len;
+    } else @compileError();
   };
   sub ~~ fn (self~Self,start~u64, end~(? u64)) Self {
     result ~ Self;
@@ -53,9 +39,9 @@ slice ~~ fn (t~type) type return @struct{
   };
   iter ~~ fn (self~Self) any {
     resT ~~ @struct{
-      mem   ~@typeof(self);
-      place ~@typeof(self.len);
-      next  ~~ fn (self~@reft @this()) (? @reft t) {
+      mem   ~Self;
+      place ~u64;
+      next  ~~ fn (self~(@reft @this())) (? @reft t) {
         if (self.place >= self.mem.len)
           return null;
         self.place = self.place + 1;
@@ -69,5 +55,5 @@ slice ~~ fn (t~type) type return @struct{
 };
 
 @struct{
-  slice ~~ slice ;
+  slice ~~ slice;
 };

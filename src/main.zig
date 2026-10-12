@@ -2,12 +2,12 @@ const std = @import("std");
 const args = @import("args");
 
 const ceeshel = @import("ceeshel");
+const parser = @import("ts_adapt.zig");
 
 pub fn println(comptime fmt: []const u8, args_: anytype) void {
     return std.debug.print(fmt ++ "\n", args_);
 }
 
-/// Command line options; `args` derives every flag from these fields.
 const Options = struct {
     help: bool = false,
     out: ?[]const u8 = null,
@@ -38,6 +38,29 @@ pub fn main(init: std.process.Init) !u8 {
         return 0;
     }
 
-    println("hello world", .{});
+    if (parsed.positionals.len != 1) {
+        println("expected one input file; use --help for usage", .{});
+        return 1;
+    }
+
+    const filename = parsed.positionals[0];
+    const content = std.Io.Dir.cwd().readFileAlloc(init.io, filename, init.gpa, .limited(std.math.maxInt(u32))) catch |err| {
+        println("{s}: {t}", .{ filename, err });
+        return 1;
+    };
+    defer init.gpa.free(content);
+
+    var diagnostic: parser.Diagnostic = .{};
+    var tree = parser.parse(init.gpa, filename, content, &diagnostic) catch |err| {
+        if (err == error.SyntaxError or err == error.UnsupportedNode) {
+            println("{s}:{d}:{d}: {t}", .{ filename, diagnostic.line, diagnostic.column, err });
+        } else {
+            println("{s}: {t}", .{ filename, err });
+        }
+        return 1;
+    };
+    defer tree.deinit();
+    println("{f}", .{tree.full()});
+
     return 0;
 }

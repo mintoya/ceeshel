@@ -3,9 +3,9 @@
 CSHL has a small core, its syntax (§1) and a fixed set of `@` builtins (§3).
 Everything else is library code.
 
-- `fn`, `if`, `while`, `slice`, `iterator`, `enum_tag`, the integer aliases
-  (`i8`..`i64`, `u8`..`u64`), and `true`/`false`/`null`/`not` are **ordinary CSHL
-  definitions** in the library, not syntax or builtins.
+Sections 1–4 describe the language contract. The current Zig executable parses
+source and prints its AST; evaluation, type checking, and C generation are not
+yet connected to that executable. Section 5 describes the implemented frontend.
 
 ## 1. Syntax
 
@@ -13,27 +13,23 @@ Everything else is library code.
 
 | Class | Spelling |
 | --- | --- |
-| identifier | `@?[A-Za-z_$?!#][A-Za-z0-9_$?!#]*` |
-| number | `-?[0-9]+`, `0x…`, `0b…` |
+| identifier | `@?[A-Za-z_$?!#][A-Za-z0-9_$?!#]*`; also `'` and `` ` `` |
+| number | `-?[0-9]+`, `0x[0-9a-fA-F]+`, `0b[01]+` |
 | string | `"…"` with `\` escapes; `"yo"` is `@arr(2, @sint 8)` |
 | comment | `// …` and `/* … */` |
 
-Whitespace is insignificant except where it separates a callee from a block.
+Whitespace and comments separate tokens. A tight block call requires the opening
+delimiter to immediately follow the callee; a comment between them makes the
+call loose, just as whitespace does. Negative decimal literals are single
+tokens; the grammar has no general unary-minus operator.
 
-### Grammar
+### Statements and blocks
 
-```
-program    = { statement }
-statement  = ";" | expression ";"
-expression = id | string | number | decl | block | op
-decl       = name "~" ( type [ ("~" | "=") value ]
-                      | ("~" | "=") value )
-block      = "{" { statement } "}"                 bblock: yields last expression
-           | "[" [ expr { "," expr } [","] ] "]"   ablock: comma list
-           | "(" [ expr { "," expr } [","] ] ")"   pblock: comma list
-```
-
-`name` is an identifier, or an operator spelling supplied by `@id("…")`.
+A file and a brace block contain semicolon-terminated expressions or empty
+statements (`;`). The final expression also requires a semicolon. Parenthesized
+and bracketed blocks contain comma-separated expressions, may be empty, and
+allow a trailing comma. An unparenthesized comma list requires at least two
+expressions and does not allow a trailing comma.
 
 ### Operators
 
@@ -46,25 +42,38 @@ Tightest to loosest:
 | 3 | `as` | cast |
 | 4 | `*` `/` `%` | |
 | 5 | `+` `-` | |
-| 6 | `<` `>` `<=` `>=` `==` `!=` `<==>` | comparisons |
-| 7 | `and` `or` `band` `bor` `bxor` `shl` `shr` | `and`/`or` short-circuit |
+| 6 | `<` `>` `<=` `>=` `==` `!=` `<=>` | comparisons |
+| 7 | `and` `or` `xor` `band` `bor` `bxor` `shl` `shr` | `and`/`or` short-circuit |
 | 8 | loose call | juxtaposition: `f x`, `f (x, y)` |
 | 9 | `\|>` | pipe (§Methods and pipes) |
 | 10 | `~` | declaration |
 | 11 | `=` | assignment (loosest) |
 
 Comparisons bind tighter than `and`/`or`/bitwise: `a == b and c` is `(a == b) and c`.
+Binary operators associate left, except assignment, which associates right.
+Loose calls and declarations also associate right: `f g x` is `f (g x)`.
 
 ### Calls
 
 Juxtaposition is a call, and spacing selects which:
 
 - `f(x)` — tight call; the parenthesized block is the argument list.
-- `f[x]` — the whole bracketed block is one AST argument.
+- `f[x]` — tight bracket call, represented by the distinct `[]` operator;
+  the whole bracketed block remains its right operand and is passed as one AST
+  argument to a bracket-call overload.
 - `f (x)` — loose call; the whole parenthesized block is **one** argument.
 - `f x` — one argument.
+- `f x, y` — loose call with a comma list supplying two arguments.
+- `f{…}` and `f {…}` — `()` calls with the whole brace block as one argument.
 
-Blocks chain: `f{…}[…](…)` calls through each in turn.
+Blocks chain left to right: `f{…}[…](…)` calls through each in turn.
+
+Ordinary calls use `()` in the AST. Their right operand is a parenthesized
+argument list: a loose single argument is wrapped in a one-item list, so
+`f (x, y)` preserves the original parenthesized block inside that list. Tight
+parentheses and loose comma lists supply their children directly. Only a tight
+bracket call selects `[]`; `f [x]` uses `()` with one bracket-block argument.
+There is no separate `{}` call operator.
 
 ### Methods and pipes
 
@@ -129,7 +138,7 @@ as a value are rejected.
 | `@gensym(prefix)` / `@id(string)` | fresh identifier / identifier by spelling |
 | `@apply(f, list)` / `@splice` | map an AST-returning `f` over list children / insert children |
 | `@typeinfo(T)` | reflection value (§Reflection) |
-| `@rawget(v, name)` | read a member without running a `.` overload |
+| `@raw(astOp)` | do an operation without overloads |
 | `@specialize(call)` | the specialization a call selects, without executing it |
 | `@compiles(expr)` | whether `expr` is valid in the current scope (side effects such as environment writes are not undone) |
 | `@returntype()` / `@returnvalue()` | enclosing return type / captured return value in `defer` |
@@ -152,7 +161,7 @@ as a value are rejected.
 | --- | --- |
 | `@import(path)` | load a file and yield its result (a file exports by ending in a struct) |
 | `@path()` / `@path(name)` | current source / a name resolved relative to it |
-| `@using(struct)` | introduce a namespace's members into the scope |
+| `@using(struct)` | introduce a struct's members into the scope |
 | `@unbind(name)` | drop a current-scope binding |
 | `@_Env_set(keys…, value)` / `@_Env_get(keys…)` | compilation-wide compile-time tree |
 
@@ -196,11 +205,11 @@ Explicit `as` converts between pointer types.
 
 ### Aggregates and layout
 
-- `@struct`: runtime members plus compile-time namespace members.
-- `@union`: runtime members all at offset 0; member initializers rejected.
+- `@struct`: runtime members plus compile-time members, natural only
+- `@union`: runtime members only
 - `@arr(N, T)`: fixed length, `a[i]` access, zero length allowed.
 - `@sizeof`/`@alignof`/`@offsetof` inspect layout; a struct of only typed
-  constants has size zero.
+  constants has size zero, structs ithout members or ith size zero are stripped or replaced with void
 
 ### Functions and overloads
 
@@ -221,11 +230,15 @@ name it (it rejects compile-time parameters). Each call or `@specialize` fixes
 
 Overloads are namespace functions named with `@id("operator")`:
 
-- Comparison overloads: only `>`, `==`, `<==>` may be declared. `<` reverses `>`,
+- `()` and `[]` are distinct call overloads. Bracket calls select `[]` without
+  falling back to `()`. The receiver is the first overload argument; `[]` then
+  receives the complete bracket block as an AST argument.
+
+- Comparison overloads: only `>`, `==`, `<=>` may be declared. `<` reverses `>`,
   `<=` negates `>`, `>=` negates reverse `>`, `!=` negates `==`. With no `>`/`==`,
-  comparisons use the sign of `<==>`.
+  comparisons use the sign of `<=>`.
 - `band` `bor` `bxor` `shl` `shr` cannot be overloaded.
-- Return-type rules: `==`/`>` must return `@bool`, `<==>` must return `@sint 8`,
+- Return-type rules: `==`/`>` must return `@bool`, `<=>` must return `@sint 8`,
   and `as` must return exactly the requested type. A mismatch is
   `OVERLOAD_RETURN_TYPE`, and no coercion repairs it.
 - `as` and comparison overloads cannot be `inline` or `any`; `as` also cannot take
@@ -236,7 +249,7 @@ Overloads are namespace functions named with `@id("operator")`:
   AST operands and return `@inlineast()`, expanded at the coercion site; the result
   is discarded.
 - `.` is overloadable too: its overload receives the receiver and the member name
-  as an `ast` (read the real member with `@rawget`).
+  as an `ast`.
 - Without an overload, `as` is a builtin cast.
 
 ### Control flow, defer
@@ -286,14 +299,10 @@ namespace for `.fn` outside a function is `NAMESPACE_HAS_NO_FUNCTION`.
 
 ### Modules and environment
 
-`@import(path)` yields a file's result `@using` introduces those members and rejects
+`@import(path)` yields a file's result. `@using` introduces those members and rejects
 a non-struct or duplicate name; introduced names do not escape a block. `@path(name)`
 resolves relative to the source, normalizing `.`/`..`. `@unbind` removes only a
 current-scope binding. `@_Env_set`/`@_Env_get` are a compilation-wide compile-time
 tree, shared with imports and fresh per compilation; missing paths, including a
 parent that only has children, are rejected.
 
-### C integration
-
-Programs compile to standard C99 with no extensions. `@cout` text is the
-program's responsibility.

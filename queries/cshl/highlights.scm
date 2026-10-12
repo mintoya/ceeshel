@@ -12,8 +12,8 @@
 (op left: (id) @function.call
   !operator)
 
-["as" "and" "or" "band" "bor" "bxor" "shl" "shr"] @keyword.operator
-["." ":" "*" "/" "%" "+" "-" "<" ">" "<=" ">=" "==" "!=" "<==>" "|>" "=" "~"] @operator
+["as" "and" "or" "xor" "band" "bor" "bxor" "shl" "shr"] @keyword.operator
+["." ":" "*" "/" "%" "+" "-" "<" ">" "<=" ">=" "==" "!=" "<=>" "|>" "=" "~"] @operator
 ["(" ")" "[" "]" "{" "}"] @punctuation.bracket
 ["," ";"] @punctuation.delimiter
 

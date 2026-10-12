@@ -46,7 +46,7 @@ module.exports = grammar({
       $.op
     ),
     op: $ => choice(
-      prec.right('block-call', seq(field('left', $._expression), field('right', choice($._block_immediate, alias($._immediate_block_call, $.op))))),
+      prec.left('block-call', seq(field('left', $._expression), field('right', $._block_immediate))),
       
 
       prec.right('call', seq(field('left', $._expression), field('right', $._any_expression))), 
@@ -58,8 +58,8 @@ module.exports = grammar({
       prec.left('type', seq(field('left', $._expression), field('operator', choice('as')), field('right', $._expression))),
       prec.left('mul', seq(field('left', $._expression), field('operator', choice('*', '/', '%')), field('right', $._expression))),
       prec.left('add', seq(field('left', $._expression), field('operator', choice('+', '-')), field('right', $._expression))),
-      prec.left('bit', seq(field('left', $._expression), field('operator', choice('and', 'or', 'band', 'bor', 'shr', 'shl', 'bxor')), field('right', $._expression))),
-      prec.dynamic(1, prec.left('cmp', seq(field('left', $._expression), field('operator', choice('<', '>', '<=', '>=', '==', '!=', '<==>')), field('right', $._expression)))),
+      prec.left('bit', seq(field('left', $._expression), field('operator', choice('and', 'or', 'xor', 'band', 'bor', 'shr', 'shl', 'bxor')), field('right', $._expression))),
+      prec.dynamic(1, prec.left('cmp', seq(field('left', $._expression), field('operator', choice('<', '>', '<=', '>=', '==', '!=', '<=>')), field('right', $._expression)))),
       prec.left('pipe', seq(field('left', $._expression), field('operator', '|>'), field('right', $._expression))),
       prec.right('assign', seq(field('left', $._expression), field('operator', '='), field('right', $._expression))),
     ),
@@ -86,7 +86,7 @@ module.exports = grammar({
 
     _block: $ => choice($.bblock, $.ablock, $.pblock),
     
-    _comma_list: $ =>  seq($._expression, repeat(seq(',', $._expression)), optional(',')),
+    _comma_list: $ => seq($._expression, optional(seq(',', optional($._comma_list)))),
     bblock: $ => prec(2,seq('{', repeat($._statement), '}')),
     ablock: $ => prec(2,seq('[',optional($._comma_list),']')),
     pblock: $ => prec(2,seq('(',optional($._comma_list),')')),
@@ -96,21 +96,6 @@ module.exports = grammar({
     nblock: $ => prec('nblock', 
       seq($._expression, repeat1($._nblock_continuation))
     ),
-
-    _block_call_tail: $ => prec.right('block-call', choice(
-      $._block_immediate,
-      $._block,
-      alias($._immediate_block_call, $.op),
-      alias($._block_call, $.op)
-    )),
-    _immediate_block_call: $ => prec.right('block-call', seq(
-      field('left', $._block_immediate),
-      field('right', $._block_call_tail)
-    )),
-    _block_call: $ => prec.right('block-call', seq(
-      field('left', $._block),
-      field('right', $._block_call_tail)
-    )),
 
     _block_immediate: $ => choice(
       $._bblock_immediate,

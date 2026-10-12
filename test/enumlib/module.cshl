@@ -154,9 +154,7 @@ while ~~ fn (a ~ast) inline {
     };
   },{
     return @qot @loop{
-      @if (@uqot(a)),
-        (0),
-        (break());
+      @if (@uqot(a)),{},(break());
     };
   };
 };

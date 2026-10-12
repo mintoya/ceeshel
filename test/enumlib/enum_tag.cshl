@@ -73,7 +73,7 @@ enum_tag ~~ fn (syntax~ast) inline {
   fields ~~ @apply(make_field, variants);
   union_index ~ast = @qot(0);
   make_union_field ~~ fn (variant~ast) ast {
-    name ~~ variant.op.":".opleft;
+    name ~~ variant.":".opleft;
     tag ~~ union_index;
     union_index = @qot(@uqot(union_index) + 1);
     return @qot(@uqot(name) ~@typeinfo(Variants).struct.members[@uqot(tag)].type);
