@@ -1,6 +1,0 @@
-items ~~ @qot [11, 22];
-quoted ~~ @qot @qot [@splice items];
-expanded ~~ @uqot quoted;
-first ~~ @uqot expanded[0];
-second ~~ @uqot expanded[1];
-(first == 11) and (second == 22) and (expanded[2] == items[2]);

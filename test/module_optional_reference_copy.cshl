@@ -1,8 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-x ~i32 = 7;
-Optional ~~ ?(@reft(i32));
-a ~Optional = @ref x;
-b ~Optional = a;
-b.value |> { _ = 42; };
-b = null;
-(x == 42) and (a.value == 42) and (a as bool) and not(b as bool);

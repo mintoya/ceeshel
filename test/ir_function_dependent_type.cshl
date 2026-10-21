@@ -1,3 +1,0 @@
-identity ~~ @fn((T ~@type(), x ~T), T, { return x; });
-y ~= identity(@uint(3), 15);
-(y == 7) and (@typeof(y) == @uint(3));

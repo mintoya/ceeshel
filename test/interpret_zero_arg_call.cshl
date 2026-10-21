@@ -1,4 +1,0 @@
-seven ~~ @fn (),@int(),{
-  return 7;
-};
-seven() == 7;

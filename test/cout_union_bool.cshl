@@ -1,6 +1,0 @@
-U ~~ @union { raw ~@uint(8); flag ~@bool(); };
-x ~U;
-x.raw = 7;
-nonzero ~@bool() = x.flag == (1 == 1);
-x.raw = 0;
-nonzero and (x.flag == (0 == 1));

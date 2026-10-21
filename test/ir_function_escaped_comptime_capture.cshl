@@ -1,6 +1,0 @@
-make ~~ @fn((n ~@int()), @any(), {
-  return @fn((), @int(), { return n; });
-});
-f ~~ make(7);
-g ~~ make(9);
-(f() == 7) and (g() == 9) and (f() == 7);

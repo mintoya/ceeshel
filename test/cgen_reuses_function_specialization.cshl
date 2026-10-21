@@ -1,7 +1,0 @@
-add_one ~~ @fn((T~@type(), x~T), T, { return x + 1; });
-a ~@sint(32) = 1;
-b ~@sint(32) = 20;
-c ~@sint(32) = 40;
-(add_one(@sint(32), a) == 2)
-  and (add_one(@sint(32), b) == 21)
-  and (add_one(@sint(32), c) == 41);

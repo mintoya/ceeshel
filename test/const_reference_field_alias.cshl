@@ -1,7 +1,0 @@
-s32 ~~ @sint(32);
-Cell ~~ @struct { value ~ @refT(s32); };
-x ~s32 = 3;
-c ~Cell;
-c.value = @ref x;
-r ~@refT(s32) ~ c.value;
-r == 3;

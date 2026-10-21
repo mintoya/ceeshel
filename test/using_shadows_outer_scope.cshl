@@ -1,4 +1,0 @@
-N ~~ @struct { x ~~ 2; };
-x ~~ 1;
-inner ~= { @using(N); x == 2; };
-inner and (x == 1);

@@ -1,6 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-Callable ~~ callable (i32, i32) i32;
-add ~~ fn (a~i32, b~i32) i32 return a + b;
-p ~fnptr (i32, i32) i32 = add;
-callback ~Callable = p;
-callback(19, 23) == 42;

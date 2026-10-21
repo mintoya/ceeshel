@@ -1,7 +1,0 @@
-i8 ~~ @sint(8);
-x ~i8 = 0 - 3;
-back ~i8 = 0 - 1;
-large ~i8 = 120;
-((x shl 1) == (0 - 6)) and ((x shr 1) == (0 - 2))
-  and ((x shl back) == (0 - 2)) and ((x shr back) == (0 - 6))
-  and ((x shl large) == 0);

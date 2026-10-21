@@ -4,3 +4,4 @@ zig-pkg/
 *.o
 /nvim.log
 /tree-sitter
+/a.out

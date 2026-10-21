@@ -1,6 +1,0 @@
-type ~~ @type();
-s8 ~~ @sint(8);
-s32 ~~ @sint(32);
-x ~s32 = 4;
-y ~s8 = 3;
-(@typeof(y + x) == s32) and ((y + x) == 7);

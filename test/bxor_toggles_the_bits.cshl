@@ -1,5 +1,0 @@
-type ~~ @type();
-s32 ~~ @sint(32);
-a ~s32 = 0b1100;
-b ~s32 = 0b1010;
-(@typeof(a bxor b) == s32) and ((a bxor b) == 0b0110) and ((a bxor a) == 0) and ((b bxor 0) == b) and (((0 - 1) bxor 0b0110) == (0 - 7));

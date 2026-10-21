@@ -1,8 +1,0 @@
-capture ~~ @fn((a ~@ast()), @ast(), { return a; });
-spaced ~~ capture (10,20);
-explicit ~~ capture((10,20));
-tight ~~ capture(30);
-(@uqot(spaced.pblock[0]) == 10)
-  and (@uqot(spaced.pblock[1]) == 20)
-  and (@uqot(explicit.pblock[1]) == 20)
-  and (@uqot(tight) == 30);

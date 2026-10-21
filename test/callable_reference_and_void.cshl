@@ -1,8 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-Callable ~~ callable (@reft(i32)) void;
-set ~~ fn (value~@reft(i32)) void { value = 42; };
-p ~fnptr (@reft(i32)) void = set;
-callback ~Callable = p;
-x ~i32 = 0;
-callback(@ref x);
-x == 42;

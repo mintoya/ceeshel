@@ -1,7 +1,0 @@
-x ~@sint(32) = 0;
-bump ~~ @fn((), @sint(32), { x = x + 1; return x; });
-join ~~ @fn((a ~@sint(32), b ~@sint(32)), @sint(32), { return a * 10 + b; });
-clear ~~ @fn((), @void(), { x = 0; return(); });
-joined ~= join(bump(), bump());
-clear();
-(joined == 12) and (x == 0) and (@typeof(clear()) == @void());

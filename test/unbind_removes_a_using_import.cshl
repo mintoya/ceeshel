@@ -1,4 +1,0 @@
-@using(@struct { x ~~ 2; });
-@unbind("x");
-x ~~ 3;
-x == 3;

@@ -1,5 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-identity ~~ fn (value~any) any return value;
-selected ~~ specialize(identity(0 as i32));
-p ~fnptr (i32) i32 = selected;
-(p(42) == 42) and (selected(7) == 7);

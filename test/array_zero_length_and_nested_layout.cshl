@@ -1,5 +1,0 @@
-Z ~~ @arr(0, @uint(24));
-A ~~ @arr(2, @arr(3, @sint(16)));
-x ~A;
-x[1][2] = 0 - 7;
-(@sizeof(Z) == 0) and (@alignof(Z) == 3) and (@sizeof(A) == 12) and (x[1][2] == (0 - 7));

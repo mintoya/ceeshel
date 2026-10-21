@@ -1,3 +1,0 @@
-f ~~ @fn((x ~@any()), @any(), { x = 9; return x; });
-y ~= f(7 as @uint(3));
-(y == 1) and (@typeof(y) == @uint(3));

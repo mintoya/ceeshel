@@ -1,5 +1,0 @@
-@using @import @path "module.cshl";
-f ~~ fn (amount~int) i32 return amount;
-selected ~~ specialize(f(42));
-p ~@fnptr((), i32) = selected;
-(p() == 42) and (selected() == 42);

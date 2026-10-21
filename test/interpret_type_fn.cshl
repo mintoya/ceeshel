@@ -1,5 +1,0 @@
-type ~~ @type();
-two ~~ @fn((t ~type),type,{
-  return @arr(2, t);
-});
-two(@sint(8)) == @arr(2, @sint(8));

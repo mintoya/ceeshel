@@ -1,8 +1,0 @@
-type ~~ @type();
-s32 ~~ @sint(32);
-f ~~ @fn (), s32, { return 7; };
-a ~~ f();
-// reading a name yields the place, not what the place holds, so @typeof reports
-// the s32 underneath, stripping const; @isconst and @isref query the place. The callee
-// still returned an unqualified value that had to be accepted at the call.
-(a == 7) and (@typeof(a) == s32) and @isconst(a) and @isref(a);

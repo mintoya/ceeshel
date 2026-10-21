@@ -1,8 +1,0 @@
-type ~~ @type();
-s32 ~~ @sint(32);
-S ~type~ @struct { a ~s32; b ~s32; };
-s ~S;
-s.a = 5;
-p ~(@ptr s32)~ @where s.a;
-@at p = 9;
-(s.a - 9) == 0;

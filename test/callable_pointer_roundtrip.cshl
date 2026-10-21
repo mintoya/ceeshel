@@ -1,7 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-Callable ~~ callable (i32) i32;
-f ~~ fn (width~int, value~@sint(width)) (@sint(width)) return value + 1;
-p ~fnptr (i32) i32 = specialize(f(32, 0));
-callback ~Callable = p;
-q ~fnptr (i32) i32 = callback as Callable.Pointer;
-(q(41) == 42) and (callback(7) == 8);

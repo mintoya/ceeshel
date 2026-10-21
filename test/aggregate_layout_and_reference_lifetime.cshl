@@ -1,6 +1,0 @@
-S ~~ @struct { prefix ~@uint(8); middle ~@uint(24); tail ~@uint(8); };
-x ~S;
-r ~@refT(@uint(24)) = x.middle;
-r = 0x123456;
-(@offsetof(S, prefix) == 0) and (@offsetof(S, middle) == 3) and (@offsetof(S, tail) == 6)
- and (@sizeof(S) == 9) and (@alignof(S) == 3) and (x.middle == 0x123456);

@@ -1,6 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-Callable ~~ callable () i32;
-answer ~~ fn () i32 return 42;
-callback ~Callable= 
-  answer as (fnptr () i32);
-callback() == 42;

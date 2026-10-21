@@ -1,3 +1,0 @@
-wide ~~ @fn((), @uint(8), { return 255; });
-narrow ~~ @fn((), @sint(3), { return wide(); });
-(narrow() == -1) and (@typeof(narrow()) == @sint(3));

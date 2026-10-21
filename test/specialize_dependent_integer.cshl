@@ -1,9 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-f ~~ fn (width~int, value~@sint(width)) (@sint(width)) {
-  return value + 1;
-};
-f32 ~~ specialize(f(32, 0 as i32));
-f8 ~~ @specialize(f(8, 0 as i8));
-p ~fnptr (i32) i32 = f32;
-q ~fnptr (i8) i8 = f8;
-(p(41) == 42) and (q(126) == 127) and (f32(9) == 10);

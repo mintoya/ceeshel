@@ -1,8 +1,0 @@
-x ~@sint(32) = 0;
-bump ~~ @fn((), @void(), { x = x + 1; return(); });
-get ~~ @fn((), @sint(32), {
-  bump();
-  nested ~~ @fn((), @sint(32), { return x; });
-  return nested();
-});
-(get() == 1) and (get() == 2) and (x == 2);

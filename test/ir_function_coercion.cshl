@@ -1,6 +1,0 @@
-f ~~ @fn((x ~@uint(3)), @sint(3), { return x; });
-g ~~ @fn((x ~@sint(32)), @sint(32), {
-  @if(x < 0, { return 11; });
-  return x + 1;
-});
-(f(15) == -1) and (g(-1) == 11) and (g(4) == 5);

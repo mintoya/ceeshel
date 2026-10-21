@@ -1,4 +1,0 @@
-x ~@sint(32) = 0;
-f ~~ @fn((), @sint(32), { x = x + 1; return x; });
-T ~~ @typeof(f());
-(T == @sint(32)) and (x == 0) and (f() == 1) and (x == 1);

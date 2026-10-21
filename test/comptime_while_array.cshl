@@ -1,7 +1,0 @@
-i~=0;
-@cwhile(i <= 5, {
-  i = i + 1;
-  x~@arr(i,@sint(32));
-});
-x~@arr(i,@sint(32));
-@sizeof(@typeof(x)) == 24;

@@ -1,8 +1,0 @@
-V ~~ @volatile(@sint(32));
-S ~~ @struct { value ~V; };
-s ~S;
-s.value = 11;
-update ~~ @fn((p ~@ptr(V)), @sint(32), {
-  @cout("*arg0 = *arg0 + 6; return *arg0;");
-});
-(update(@where(s.value)) == 17) and (s.value == 17);

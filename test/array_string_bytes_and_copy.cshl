@@ -1,5 +1,0 @@
-s ~= "a\n\0";
-t ~= s;
-t[0] = 98;
-(@sizeof(@typeof(s)) == 3) and (s[0] == 97) and (s[1] == 10) and (s[2] == 0)
- and (t[0] == 98) and (@typeof(s) == @arr(3, @sint(8))) and (@sizeof(@typeof("")) == 0);

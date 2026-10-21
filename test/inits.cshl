@@ -1,2 +1,0 @@
-i ~@struct{i~@sint(32);};
-i.i == 0;

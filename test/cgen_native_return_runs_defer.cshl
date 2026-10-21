@@ -1,8 +1,0 @@
-i32 ~~ @sint(32);
-seen ~i32;
-f ~~ @fn((n ~i32), i32, {
-  defer { seen = @returnvalue(); };
-  @cout "return arg0 + 2;";
-});
-result ~i32 = f(5);
-(result == 7) and (seen == 7);

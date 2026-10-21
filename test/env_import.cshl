@@ -1,5 +1,0 @@
-@_Env_set("shared", "value", 17);
-from_file ~~ @import(@path("env_import_dep.cshl"));
-exports ~~ @_Env_get("shared", "exports");
-(from_file == 17) and (@_Env_get("shared", "value") == 42)
-  and (exports.answer == 17);

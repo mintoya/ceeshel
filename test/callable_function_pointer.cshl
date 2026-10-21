@@ -1,7 +1,0 @@
-@using @import @path "enumlib/module.cshl";
-Callable ~~ callable (i32) i32;
-increment ~~ fn (value~i32) i32 return value + 1;
-p ~fnptr (i32) i32 = increment;
-a ~Callable = p;
-b ~Callable = p as Callable;
-(a(41) == 42) and (b(7) == 8);

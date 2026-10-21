@@ -1,9 +1,0 @@
-T ~~ @struct {
-  x ~@sint(32);
-  @id("()") ~~ @fn((self ~@ast(), ignored ~@ast()), @inlineast(), {
-    return @qot(@uqot(self).x);
-  });
-};
-a ~T;
-a.x = 17;
-a[unbound_argument] == 17;

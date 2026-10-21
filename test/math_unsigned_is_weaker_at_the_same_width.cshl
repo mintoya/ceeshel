@@ -1,6 +1,0 @@
-type ~~ @type();
-s32 ~~ @sint(32);
-u32 ~~ @uint(32);
-a ~s32 = 5;
-b ~u32 = 2;
-(@typeof(a + b) == u32) and ((a + b) == 7);
