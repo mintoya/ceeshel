@@ -1,0 +1,23 @@
+(~ [i32 ~ (@sint 32)])
+(~ [info = (@typeInfo i32)])
+
+// typeinfo's tag is an array, the non used bytes are zeros
+(~ [infostr ~ (@fn [(@any []) (@typeof (. [info tag])) {
+  (~ [r (@returntype [])]) // zero initialization by default
+  (~ [i i32 = 0])
+  (@loop {
+    (@if [(>= [i (. [(. [(@typeinfo (@arg [])) array]) len])]) (@break [])])
+    (= [((: [r get]) i) ((: [(@arg []) get]) i)])
+    (= [i (+ [i 1])])
+  })
+  r
+}])])
+
+(== [(. [info tag]) (infostr "type")])
+(~ [i325 ~ (@arr [5 i32])])
+
+(= [info (@typeInfo i325)])
+(== [(. [info tag]) (infostr "array")])
+
+(== [(. [(. [info array]) member]) i32])
+(== [(. [(. [info array]) len]) 5])

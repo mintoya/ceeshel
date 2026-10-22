@@ -1,5 +1,6 @@
 const std = @import("std");
 const args = @import("args");
+const ast = @import("ast.zig");
 
 pub fn println(comptime fmt: []const u8, args_: anytype) void {
     return std.debug.print(fmt ++ "\n", args_);
@@ -15,7 +16,7 @@ const Options = struct {
     };
 
     pub const meta = .{
-        .usage_summary = "[options] [file]",
+        .usage_summary = "...[options] [file]",
         .option_docs = .{
             .help = "print this help and exit",
             .out = "write output to this file",
