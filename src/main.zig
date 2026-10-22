@@ -1,6 +1,7 @@
 const std = @import("std");
 const args = @import("args");
-const ast = @import("ast.zig");
+const Tokenizer = @import("tokinize.zig");
+const Ast = @import("ast.zig");
 
 pub fn println(comptime fmt: []const u8, args_: anytype) void {
     return std.debug.print(fmt ++ "\n", args_);
@@ -41,6 +42,8 @@ pub fn main(init: std.process.Init) !u8 {
         return 1;
     }
 
-    println("hello world", .{});
+    var state = try Ast.AstState.init(init.gpa);
+    const entry = try Ast.Ast.parse(init.io, .{ .filename = parsed.positionals[0] }, &state);
+    println("{f}", .{Ast.AstCtx{ .state = &state, .ast = state.asts.items[entry] }});
     return 0;
 }
