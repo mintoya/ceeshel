@@ -1,0 +1,8 @@
+x ~~ fn [a~i32,b~ast] i32 {
+  a = a + (`b);
+};
+//analogous to x ~~ fn @struct{a~i32;b~i32;} void {};
+// but that creates an obvious problem
+
+// right here
+x[1,2];
