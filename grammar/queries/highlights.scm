@@ -16,32 +16,21 @@
 ((id) @variable.builtin
  (#eq? @variable.builtin "_"))
 
-; Declarations
-(decl type: (id) @type)
-(decl name: (id) @variable.builtin)
+; Declarations: x ~T = v
+(call type: (id) @type)
+(call name: (id) @variable.builtin)
 
-; Calls: tight `f(x)` and juxtaposition `f x` are ops without an operator
-(op
-  left: (id) @function.call
-  !operator)
+; Calls: the head of f[x], f(x) and f x
+(call
+  function: (id) @function.call)
 
-; Member access and methods
-(op
-  operator: "."
-  right: (id) @variable.member)
-(op
-  operator: ":"
-  right: (id) @function.method)
-
-; a <<f>> b: the function between the brackets
-(op
-  "<<"
-  operator: (id) @function.call)
-(op
-  "<<"
-  operator: (op
-    operator: [":" "."]
-    right: (id) @function.call))
+; Member access and methods: a.b, a:m
+(call
+  function: "."
+  argument: (id) @variable.member .)
+(call
+  function: ":"
+  argument: (id) @function.method .)
 
 ; Builtins, after calls so @fn[...] keeps its own color
 ((id) @function.macro

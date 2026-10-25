@@ -8,9 +8,9 @@
             .url = "git+https://github.com/ikskuh/zig-args?ref=master#ad3c89ecdb2979b8b5d52b43b78e79bf51293235",
             .hash = "args-0.0.0-CiLiqmHiAABlN6icC9sZHdp8HVplOXDxuUNz2VUY_K2X",
         },
-        .treesitter = .{
-            .url = "git+https://github.com/muhammad-fiaz/tree-sitter.zig.git#1b4c406071b45fb01180e85898c8c69def906c18",
-            .hash = "treesitter-0.0.2-QlQpWPXYBwAXO8kLp1Uz6NpLEu165izSbXw1abDxHlfp",
+        .tree_sitter = .{
+            .url = "git+https://github.com/tree-sitter/zig-tree-sitter#b562510b5563dcf3b7fcac4a5fe9d60834c84667",
+            .hash = "tree_sitter-0.26.0-8heIf-vDAQDh0HhAAUVwVZFmLrwSKMZl5gRaVFqtas0W",
         },
     },
     .paths = .{

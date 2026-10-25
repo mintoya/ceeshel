@@ -7,7 +7,10 @@ i32 ~~ @sint(32);
 
 // fn[params, ret] body: the parameters and return type now, the body next
 fn ~~ @fn[[params ~ast, ret ~ast], inline,
-  '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
+  '@fn[[body ~ast], any, @fn[
+    `params,
+    `ret,
+    \`body]]];
 
 ([i ~i32] <<fn>> i32 i + 1)(6) == 7;
 
