@@ -17,7 +17,7 @@
         "build.zig",
         "build.zig.zon",
         "src",
-        "grammar.js",
+        "grammar",
         "tree-sitter",
         "tools",
         "queries",

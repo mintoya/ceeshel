@@ -31,9 +31,10 @@ pub const Token = union(enum) {
         add = 4,
         bit = 5,
         cmp = 6,
-        call = 7,
-        pipe = 8,
-        eq = 9,
+        infix = 7,
+        call = 8,
+        pipe = 9,
+        eq = 10,
     };
 
     pub fn startsOperand(self: @This()) bool {
@@ -59,6 +60,7 @@ pub const Token = union(enum) {
             .@"+", .@"-" => .add,
             .@"and", .@"or", .xor, .shr, .shl, .band, .bor, .bxor => .bit,
             .@"<=>", .@"<", .@">", .@"<=", .@">=", .@"==", .@"!=" => .cmp,
+            .@"<<" => .infix,
             .@"|>" => .pipe,
             .@"=" => .eq,
             else => error.NotInPrecedenceList,
@@ -110,6 +112,10 @@ pub const Token = union(enum) {
     @"==": offset,
     @"!=": offset,
     //
+    /// `a <<f>> b` calls f with [a, b]; any expression can go between.
+    @"<<": offset,
+    @">>": offset,
+    //
     @"|>": offset,
     //
     @"=": offset,
@@ -124,11 +130,10 @@ pub const Error = error{
 const words = .{ "as", "and", "or", "xor", "shr", "shl", "band", "bor", "bxor" };
 
 const operators = .{
-    "<=>", "<=", ">=", "==", "!=", "|>",
-    "{",   "}",  "(",  ")",  "[",  "]",
-    ".",   ":",  "*",  "/",  "%",  "+",
-    "-",   "<",  ">",  "=",  ",",  ";",
-    "~",
+    "<=>", "<<", ">>", "<=", ">=", "==", "!=", "|>",
+    "{",   "}",  "(",  ")",  "[",  "]",  ".",  ":",
+    "*",   "/",  "%",  "+",  "-",  "<",  ">",  "=",
+    ",",   ";",  "~",
 };
 
 fn isExtra(c: u8) bool {
@@ -145,7 +150,8 @@ fn isIdCont(c: u8) bool {
 }
 
 fn idLen(rest: []const u8) usize {
-    if (rest[0] == '\'' or rest[0] == '`') return 1;
+    if (rest[0] == '\'' or rest[0] == '`' or rest[0] == '\\') return 1;
+    if (std.mem.startsWith(u8, rest, "..")) return 2; // splice
     const j: usize = if (rest[0] == '@') 1 else 0;
     if (j >= rest.len or !isIdStart(rest[j])) return 0;
     var k = j + 1;

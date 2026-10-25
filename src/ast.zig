@@ -80,4 +80,4 @@ pub const AstState = struct {
         return result;
     }
 };
-pub const AstCtx = struct { AstState, Ast };
+pub const AstCtx = struct { state: *const AstState, ast: Ast };
