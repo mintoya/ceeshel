@@ -6,14 +6,6 @@ const ts = @import("tree-sitter");
 pub const filepos = u32;
 pub const astpos = u32;
 
-/// Four kinds of node, as grammar/grammar.js produces them:
-///   atoms  id, str, num
-///   list   [a, b] and (a, b), the same thing
-///   block  {a; b}
-///   call   anything applied: f[a, b], f x, a + b, a.b, 'x, a <<g>> b, and
-///          declarations: x ~T = v is (~= x T v), x ~~ v is (~~ x v).
-///          The head is the first child.
-/// A one-item (x) or [x] without a comma is just x.
 pub const Ast = union(enum(u8)) {
     pub const Block = struct {
         block: astpos, // null terminated span in the src lst
@@ -23,11 +15,9 @@ pub const Ast = union(enum(u8)) {
     id: SrcRef,
     str: SrcRef,
     num: SrcRef,
-    list: Block, // [] and ()
-    block: Block, // {}
-    call: Block, // head, then arguments
-    /// Parses a file or a string with grammar/grammar.js; the result is a
-    /// block of its statements.
+    call: Block, // head, then arguments;
+                 // [a, b] is ([] a b),
+                 // {a; b} is ({} a b)
     pub fn parse(
         io: std.Io,
         src: union(enum) {
@@ -42,7 +32,7 @@ pub const Ast = union(enum(u8)) {
                 const text = try std.Io.Dir.cwd().readFileAlloc(io, name, ctx.alloc, .unlimited);
                 try ctx.files.append(ctx.alloc, .{ .name = name, .content = .{ .file = text } });
             },
-            .str => |s| {
+            .str => |s| { // bit stupid
                 var buffer: List(u8) = .empty;
                 try buffer.appendSlice(ctx.alloc, s);
                 try ctx.files.append(ctx.alloc, .{ .name = "<string>", .content = .{ .buffer = buffer } });
@@ -72,22 +62,17 @@ pub const Ast = union(enum(u8)) {
         return .{ .fileref = fileref, .offset = node.startByte(), .len = node.endByte() - node.startByte() };
     }
 
-    /// One tree-sitter node as an ast. Its children go in a run of their
-    /// own, reserved before any of them is converted, so the run stays
-    /// contiguous while their children are appended after it.
     fn convert(ctx: *AstState, fileref: filepos, node: ts.Node) Allocator.Error!Ast {
         const kind = node.kind();
         if (std.mem.eql(u8, kind, "id")) return .{ .id = ref(fileref, node) };
         if (std.mem.eql(u8, kind, "number")) return .{ .num = ref(fileref, node) };
         if (std.mem.eql(u8, kind, "string")) return .{ .str = ref(fileref, node) };
 
-        // the children as an ast sees them, and for a call its head
         var parts: List(Part) = .empty;
         defer parts.deinit(ctx.alloc);
         var head: ?Part = null;
         if (std.mem.eql(u8, kind, "call")) {
             if (node.childByFieldName("name")) |name| {
-                // x ~T = v: a call of ~, ~~ or ~= by its markers
                 var marks: [2]u8 = undefined;
                 var n: usize = 0;
                 var i: u32 = 0;
@@ -108,8 +93,6 @@ pub const Ast = union(enum(u8)) {
                 while (i < node.childCount()) : (i += 1) {
                     const field = node.fieldNameForChild(i) orelse continue;
                     const c = node.child(i).?;
-                    // a field on a hidden group, as in (a + b) * c, lands on
-                    // its brackets too
                     if (!c.isNamed() and std.mem.indexOfScalar(u8, "()[]", c.kind()[0]) != null) continue;
                     if (std.mem.eql(u8, field, "function")) {
                         head = .{ .node = c };
@@ -119,7 +102,7 @@ pub const Ast = union(enum(u8)) {
                 }
             }
         } else {
-            // program, list, block: their named children, less comments and `;`
+            head = .{ .text = if (std.mem.eql(u8, kind, "list")) "[]" else "{}" }; // block, program
             var i: u32 = 0;
             while (i < node.namedChildCount()) : (i += 1) {
                 const c = node.namedChild(i).?;
@@ -132,7 +115,6 @@ pub const Ast = union(enum(u8)) {
         const start: astpos = @intCast(ctx.asts.items.len);
         try ctx.asts.appendNTimes(ctx.alloc, .null, count + 1);
         var slot = start;
-        // converting appends to asts, which can move it: store each result after
         if (head) |h| {
             const a = try h.ast(ctx, fileref);
             ctx.asts.items[slot] = a;
@@ -144,21 +126,15 @@ pub const Ast = union(enum(u8)) {
             slot += 1;
         }
 
-        const block: Block = .{ .block = start, .pos = ref(fileref, node) };
-        if (std.mem.eql(u8, kind, "call")) return .{ .call = block };
-        if (std.mem.eql(u8, kind, "list")) return .{ .list = block };
-        return .{ .block = block }; // block, program
+        return .{ .call = .{ .block = start, .pos = ref(fileref, node) } };
     }
 
-    /// A child to convert: a node, or a head that isn't one piece of source
-    /// (~=), whose text goes in the <generic> buffer.
     const Part = union(enum) {
         node: ts.Node,
         text: []const u8,
         fn ast(self: Part, ctx: *AstState, fileref: filepos) Allocator.Error!Ast {
             switch (self) {
                 .node => |n| {
-                    // an operator head like + or . is a token, not a node
                     if (!n.isNamed()) return .{ .id = ref(fileref, n) };
                     return convert(ctx, fileref, n);
                 },
@@ -181,8 +157,6 @@ pub const FileItem = struct {
         buffer: List(u8),
     },
 };
-/// Text in a file. Heads that aren't one piece of source, like the ~= of
-/// x ~T = v, are text in file 0, the <generic> buffer.
 pub const SrcRef = struct {
     fileref: filepos,
     len: u32,
@@ -213,8 +187,6 @@ pub const AstState = struct {
         self.asts.deinit(self.alloc);
     }
 };
-/// An ast with the state that holds its text and children, for printing:
-/// lists as [a b], blocks as {a b}, calls as (f a b).
 pub const AstCtx = struct {
     state: *const AstState,
     ast: Ast,
@@ -222,8 +194,6 @@ pub const AstCtx = struct {
         switch (self.ast) {
             .null => try w.writeAll("null"),
             .id, .str, .num => |s| try w.writeAll(s.toslice(self.state.files)),
-            .list => |b| try self.children(w, "[", b, "]"),
-            .block => |b| try self.children(w, "{", b, "}"),
             .call => |b| try self.children(w, "(", b, ")"),
         }
     }

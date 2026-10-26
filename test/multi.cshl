@@ -1,2 +1,2 @@
-x ~~ fn [a~i32,b~ast] i32 a + (`b);
+x ~~ @fn[[a~i32,b~ast], i32, a + (`b)];
 x[1,2];

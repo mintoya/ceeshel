@@ -8,6 +8,7 @@ pub fn println(comptime fmt: []const u8, args_: anytype) void {
 
 const Options = struct {
     help: bool = false,
+    // stdin: bool = false,
     out: ?[]const u8 = null,
 
     pub const shorthands = .{
@@ -20,6 +21,7 @@ const Options = struct {
         .option_docs = .{
             .help = "print this help and exit",
             .out = "write output to this file",
+            // .stdin = "parse from stdin",
         },
     };
 };
