@@ -1,6 +1,8 @@
 const std = @import("std");
 const args = @import("args");
 const Ast = @import("ast.zig");
+const Pool = @import("pool.zig");
+const Lower = @import("lower.zig");
 
 pub fn println(comptime fmt: []const u8, args_: anytype) void {
     return std.debug.print(fmt ++ "\n", args_);
@@ -8,6 +10,7 @@ pub fn println(comptime fmt: []const u8, args_: anytype) void {
 
 const Options = struct {
     help: bool = false,
+    ast: bool = false,
     // stdin: bool = false,
     out: ?[]const u8 = null,
 
@@ -20,6 +23,7 @@ const Options = struct {
         .usage_summary = "...[options] [file]",
         .option_docs = .{
             .help = "print this help and exit",
+            .ast = "print the tree instead of evaluating",
             .out = "write output to this file",
             // .stdin = "parse from stdin",
         },
@@ -46,6 +50,12 @@ pub fn main(init: std.process.Init) !u8 {
     var state = try Ast.AstState.init(init.gpa);
     defer state.deinit();
     const entry = try Ast.Ast.parse(init.io, .{ .filename = parsed.positionals[0] }, &state);
-    println("{f}", .{Ast.AstCtx{ .state = &state, .ast = state.asts.items[entry] }});
+    if (parsed.options.ast) {
+        println("{f}", .{Ast.AstCtx{ .state = &state, .ast = state.asts.items[entry] }});
+        return 0;
+    }
+
+    var pool = try Pool.init(init.gpa);
+    defer pool.deinit();
     return 0;
 }

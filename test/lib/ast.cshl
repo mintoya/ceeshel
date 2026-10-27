@@ -1,37 +1,37 @@
-// Ast: the parts of a node, as ordinary code. The builtins know only atoms
-// and calls (.id .num .str .call, @ast_stringeq, @len, @get); everything here
-// is read off the tree as src/ast.zig builds it.
 ast ~~ @ast(); any ~~ @any(); bool ~~ @bool();
 
-// a call headed by the atom `name`
 is ~~ @fn[[x ~ast, name ~any], bool,
-  x.call and @ast_stringeq(@get[x, 0], name)];
+  @ast_stringeq(@get[x, 0], name)];
 
-// a call's children after its head; the empty AST when there are none
 items ~~ @fn[[x ~ast], ast, @get[x, 1, @len[x]]];
 
 is_list  ~~ @fn[[x ~ast], bool, is[x, "[]"]];
 is_block ~~ @fn[[x ~ast], bool, is[x, "{}"]];
 
-// x ~T is (~ x T); x ~= v and x ~T = v are (~= x v) and (~= x T v);
-// x ~~ v and x ~T ~ v are (~~ x v) and (~~ x T v)
 is_decl ~~ @fn[[x ~ast], bool, is[x, "~"] or is[x, "~="] or is[x, "~~"]];
 decl_name ~~ @fn[[x ~ast], ast, @get[x, 1]];
-// the empty AST when not written
+
 decl_type ~~ @fn[[x ~ast], ast, {
   r ~ast;
-  @if[is[x, "~"] or (@len[x] == 4), r = @get[x, 2]];
+  @if[is[x, "~"] or (@len[x] == 4),
+    r = @get[x, 2]];
   r
 }];
+
 decl_value ~~ @fn[[x ~ast], ast, {
   r ~ast;
-  @if[is[x, "~"], {}, r = @get[x, @len[x] - 1]];
+  @if[is[x, "~"],
+    {},
+    r = @get[x, @len[x] - 1]];
   r
 }];
 
 @struct{
-  is ~~ is; items ~~ items;
-  is_list ~~ is_list; is_block ~~ is_block;
-  is_decl ~~ is_decl; decl_name ~~ decl_name;
-  decl_type ~~ decl_type; decl_value ~~ decl_value;
+  items ~~ items;
+  is_list ~~ is_list;
+  is_block ~~ is_block;
+  is_decl ~~ is_decl;
+  decl_name ~~ decl_name;
+  decl_type ~~ decl_type;
+  decl_value ~~ decl_value;
 }

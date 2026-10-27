@@ -25,8 +25,6 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // grammar/grammar.js is the parser: tree-sitter generates grammar/src
-    // from it (gitignored), and its parser.c is compiled in
     const generate = b.addSystemCommand(&.{ "tree-sitter", "generate" });
     generate.setCwd(b.path("grammar"));
     generate.addFileInput(b.path("grammar/grammar.js"));

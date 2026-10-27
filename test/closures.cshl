@@ -1,15 +1,12 @@
 inline ~~ @inlineast();
 ast ~~ @ast();
 any ~~ @any();
-i32 ~~ @sint(32);
-Ast ~~ @import(@path("lib/ast.cshl"));
+i32 ~~ @sint();
+Ast ~~ @import @path "lib/ast.cshl";
 
 fn ~~ @fn[[params ~ast, ret ~ast], inline,
   '@fn[[body ~ast], any, @fn[`params, `ret, \`body]]];
 
-// [params] <<closure[captures]>> ret body: a struct holding the captures,
-// whose () function sees each capture under its own name again.
-// A bare capture `n` is a reference to n; `n ~T = v` and `n ~= v` hold v.
 name_of ~~ [x ~ast] <<fn>> ast {
   r ~ast = x;
   @if[Ast.is_decl(x), r = Ast.decl_name(x)];
@@ -32,23 +29,26 @@ type_of ~~ [x ~ast] <<fn>> ast {
 field ~~ [x ~ast] <<fn>> ast '(`(name_of x) ~ `(type_of x));
 bind ~~ [x ~ast] <<fn>> ast '(`(name_of x) ~= self.`(name_of x));
 
-closure_body ~~ @fn[[caps ~ast, params ~ast, ret ~ast], inline,
-  '@fn[[body ~ast], any, {
+closure_body ~~ [caps ~ast, params ~ast, ret ~ast] <<fn>> inline
+  'fn[[body ~ast],any]{
     C ~~ @struct{
       Self ~~ @this();
       ..`(@apply[field, Ast.items(caps)]);
-      @id("()") ~~ @fn[[self ~@refT(Self), ..`(Ast.items(params))], `ret, {
+      __call ~~ @fn[[self ~@refT(Self), ..`(Ast.items(params))], `ret, {
         ..`(@apply[bind, Ast.items(caps)]);
         \`body
       }];
     };
     result ~C = [..`(@apply[value_of, Ast.items(caps)])];
     result
-  }]];
+  };
 
 closure ~~ [caps ~ast] <<fn>> inline
-  '@fn[[params ~ast, ret ~ast], inline, closure_body[`caps, \`params, \`ret]];
+  'fn[[params ~ast, ret ~ast], inline]
+    closure_body[`caps, \`params, \`ret];
 
+six ~i32 = 6;
 seven ~i32 = 7;
-([i ~i32] <<closure[seven]>> i32 (seven = seven + i))
-  |> (_(6) == seven) and (seven == 13);
+([i ~i32] <<closure [seven,six]>> i32 
+  (seven = seven + i + six))
+|> _:__call(8) == seven;
