@@ -92,6 +92,26 @@ pub const helpers = struct {
         try words.appendSlice(self.alloc, std.mem.bytesAsSlice(u32, std.mem.sliceAsBytes(fields)));
         return compound(self, .@"struct", words.items);
     }
+    // A struct's fields exist once declared, so a struct type is made
+    // empty and its fields set as they come; its identity is the id.
+    pub fn structure_new(self: *Pool, id: u32) Allocator.Error!typeid {
+        const offset: u32 = @intCast(self.extra.items.len);
+        try self.extra.appendSlice(self.alloc, &.{ id, 0 });
+        return self.intern(.{ .type = .@"struct", .maks = .{}, .data = offset });
+    }
+    // every type made from t (refs, pointers, const) sees the new fields
+    pub fn structure_set(self: *Pool, t: typeid, fields: []const StructField) Allocator.Error!void {
+        const old = self.types.items[t].data;
+        const offset: u32 = @intCast(self.extra.items.len);
+        try self.extra.appendSlice(self.alloc, &.{ self.extra.items[old], @intCast(fields.len) });
+        try self.extra.appendSlice(self.alloc, std.mem.bytesAsSlice(u32, std.mem.sliceAsBytes(fields)));
+        for (self.types.items, 0..) |*ty, i| {
+            if (ty.type != .@"struct" or ty.data != old) continue;
+            _ = self.type_map.remove(ty.*);
+            ty.data = offset;
+            try self.type_map.put(self.alloc, ty.*, @intCast(i));
+        }
+    }
     pub fn ctag(self: *Pool, name: []const u8) Allocator.Error!typeid {
         return compound(self, .ctag, &.{try self.string(name)});
     }
@@ -109,7 +129,7 @@ pub const helpers = struct {
         return .{ .len = @as(u64, w[1]) << 32 | w[0], .elem = w[2] };
     }
     pub fn signature(self: *const Pool, t: Type) struct { params: []const typeid, ret: typeid } {
-        std.debug.assert(t.type == .function or t.type == .fnptr);
+        std.debug.assert(t.type == .@"fn" or t.type == .fnptr);
         const n = self.extra.items[t.data];
         const params = self.extra.items[t.data + 1 ..][0..n];
         return .{ .params = params, .ret = self.extra.items[t.data + 1 + n] };
@@ -149,7 +169,7 @@ pub fn layout(self: *const Pool, ti: typeid) LayoutError!Layout {
         .cslong, .culong => of(c_long),
         .cslonglong, .culonglong => of(c_longlong),
         .fnptr => of(*const fn () callconv(.c) void),
-        .type, .function, .builtin => of(u32),
+        .type, .@"fn", .builtin => of(u32),
         .ast, .inlineast => of(u32),
         .int => of(big.int.Const),
         .array => bl: {
@@ -167,7 +187,6 @@ pub fn layout(self: *const Pool, ti: typeid) LayoutError!Layout {
             }
             break :blk .{ .size = std.mem.alignForward(u64, size, alignment), .alignment = alignment };
         },
-        .typeinfo => of(Type.TypeInfo),
         .any, .ctag => error.NoLayout,
     };
 }
