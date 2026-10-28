@@ -1,0 +1,10 @@
+// a library union: one storage, u.name reads and writes it as that member
+@using @import @path "lib/union.cshl";
+i32 ~~ @sint(); u8 ~~ @uchar();
+U ~~ union[a ~i32, b ~@arr[4, u8]];
+u ~U;
+u.a = 258;
+first ~= @get[u.b, 0];
+@get[u.b, 3] = 1;
+(@sizeof(U) == 4) and (@alignof(U) == @alignof(i32))
+  and (first == 2) and (@get[u.b, 1] == 1) and (u.a == 16777474)

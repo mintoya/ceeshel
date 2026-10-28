@@ -1,0 +1,59 @@
+@using @import @path "fn.cshl";
+Ast ~~  @import @path "ast.cshl";
+// @using @import @path "combine.cshl";
+ast ~~ @ast();
+any ~~ @any();
+type ~~ @type();
+int ~~ @int();
+bool ~~ @bool();
+inline ~~ @inlineast();
+
+// @if yields nothing, so the choice is made by returning an AST
+pick ~~ [c ~bool, yes ~ast, no ~ast] <<fn>> inline { r ~ast = no; @if[c, r = yes]; r };
+// x.n is x:__dot(n) when that compiles, the builtin . otherwise; it expands
+// where it's written, so a member that is a place stays one
+@id(".") ~~ [right ~ast, left ~ast] <<fn>> inline
+  'pick[@compiles((`right):__dot(`left)), (`right):__dot(`left), @raw((`right).`left)];
+
+// storage for any of Types' members: as big as the biggest, made of the
+// most aligned one so it is aligned like it
+storage ~~ [Types ~type] <<fn>> type @raw({
+  size ~int = 0;
+  Big ~type = @uchar();
+  i ~int = 0;
+  @cwhile[i < @countof(Types), {
+    T ~~ Types.`(@fieldname(Types, i));
+    @if[@sizeof(T) > size, size = @sizeof(T)];
+    @if[@alignof(T) > @alignof(Big), Big = T];
+    i = i + 1;
+  }];
+  @arr[(size + @sizeof(Big) - 1) / @sizeof(Big), Big]
+});
+
+// a union of Types' members: u.name is the storage as that member's type
+union_of ~~ [Types ~type] <<fn>> type @struct{
+  Self ~~ @this();
+  UnionTypes ~~ Types;
+  mem ~storage(Types);
+  __dot ~~ [self ~@refT(Self), name ~ast] <<fn>> @refT(@raw(Types.`name))
+    @raw(@at((@where self.mem) as @ptr(Types.`name)));
+};
+// union[a ~T, b ~U]: the member types are written where it's used
+union ~~ [args ~ast] <<fn>> inline {
+  types ~ast = '{};
+  i ~int = 1;
+  @cwhile[i < @len[args], {
+    d ~~ @get[args, i];
+    t ~ast = '(`(Ast.decl_name(`d)) ~~ `(Ast.decl_type(`d)));
+    types = '{ ..`(@get[types, 1, @len[types]]); `t; };
+    i = i + 1;
+  }];
+  '(union_of(@struct `types))
+};
+
+@struct {
+  `@id(".") ~~ `@id(".");
+  pick ~~ pick;
+  union_of ~~ union_of;
+  union ~~ union;
+}

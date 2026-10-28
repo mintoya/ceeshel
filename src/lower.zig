@@ -253,6 +253,20 @@ fn astEql(s: *Sema, x: astpos, y: astpos) Allocator.Error!bool {
     return true;
 }
 
+// an AST's structure, for an instance key
+fn keyAst(s: *Sema, key: *List(u8), x: astpos) Allocator.Error!void {
+    const n = s.node(x);
+    try key.append(s.arena, @intFromEnum(std.meta.activeTag(n)));
+    if (n != .call) {
+        const t = s.text(x);
+        try key.appendSlice(s.arena, std.mem.asBytes(&@as(u32, @intCast(t.len))));
+        return key.appendSlice(s.arena, t);
+    }
+    const kids = try s.children(x);
+    try key.appendSlice(s.arena, std.mem.asBytes(&@as(u32, @intCast(kids.len))));
+    for (kids) |k| try s.keyAst(key, k);
+}
+
 // ---- values
 
 fn bytes(s: *Sema, x: anytype) Allocator.Error![]const u8 {
@@ -2051,6 +2065,8 @@ fn bindParams(s: *Sema, b: *Block, sc: *Scope, a: astpos, inst: *Scope, fid: u32
                 .res => |r| try s.astOfRes(b, sc, r.res),
             } else if (info.default) |d| try s.astValue(inst, d) else return s.fail(a, "MISSING_ARGUMENT", "{s}", .{info.name});
             try s.bind(inst, info.name_ast, info.name, .{ .value = try s.vAst(x) });
+            // a runtime instance is per AST, by its structure
+            try s.keyAst(&p.key, x);
             continue;
         }
         const want: ?typeid = if (t == s.t.any) null else t;
