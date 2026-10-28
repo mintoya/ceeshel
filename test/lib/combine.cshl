@@ -1,0 +1,33 @@
+@using @import @path "fn.cshl";
+@using @import @path "ify.cshl";
+//@using @import @path "ast.cshl";
+type ~~ @type();
+int ~~ @int();
+ast ~~ @ast();
+combine ~~ [a~type,b~type] <<fn>> type {
+  av ~a;
+  bv ~b;
+  fields ~= '{};
+  i~int=0;
+  @cwhile[i < @countof(a),{
+    n ~ast~ @fieldname(a,i);
+    ra ~ast~ ify[@isconst(av.`n),
+      '(`n ~@typeof(av.`n)~ av.`n),
+      '(`n ~@typeof(av.`n))];
+    fields = '{..`(@get[fields,1,@len(fields)]);`ra;};
+    i = i + 1;
+  }];
+  i = 0;
+  @cwhile[i < @countof(b),{
+    n ~ast~ @fieldname(b,i);
+    ra ~ast~ ify[@isconst(bv.`n),
+      '(`n ~@typeof(bv.`n)~ bv.`n),
+      '(`n ~@typeof(bv.`n))];
+    fields = '{..`(@get[fields,1,@len(fields)]);`ra;};
+    i = i + 1;
+  }];
+  @struct `fields
+};
+@struct{
+  combine ~~ combine;
+}

@@ -1,0 +1,22 @@
+// a struct built from another: Ptrs(T) has a pointer for each of T's fields,
+// same names. The fields are collected as an AST, then `(...) lowers it here,
+// where x is in scope for @typeof
+i32 ~~ @sint(); u8 ~~ @uint(); int ~~ @int(); ast ~~ @ast(); type ~~ @type();
+Ptrs ~~ @fn[[T ~type], type, {
+  x ~T;
+  fields ~ast = '{};
+  i ~int = 0;
+  @cwhile[i < @countof(T), {
+    name ~~ @fieldname(T, i);
+    fields = '{ ..`(@get[fields, 1, @len[fields]]); `name ~@ptr(@typeof(x.`name)); };
+    i = i + 1;
+  }];
+  `('@struct(`fields))
+}];
+P ~~ @struct{ a ~i32; b ~u8; };
+Q ~~ Ptrs(P);
+p ~P = [1, 2];
+q ~Q = [@where p.a, @where p.b];
+@at q.a = 10;
+(@countof(Q) == 2) and (@fieldtype(Q, 1) == @ptr(u8))
+  and @ast_stringeq(@fieldname(Q, 0), "a") and (p.a == 10) and ((@at q.b) == 2)

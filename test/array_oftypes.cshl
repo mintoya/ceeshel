@@ -1,0 +1,7 @@
+@using @import @path "lib/fn.cshl";
+any ~~ @any();
+arr ~~ [N~@int()] <<fn>> any
+  [T~@type()] <<fn>> any
+    @arr(N,T);
+ta ~arr(5) @type()~[(arr(6) @sint()),@uint(),@sint(),@schar(),@uchar()];
+@arr(6,@sint()) == (@get[ta,0])

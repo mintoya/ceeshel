@@ -1,0 +1,8 @@
+// error: RUNTIME_AT_COMPILE_TIME
+i32 ~~ @sint();
+g ~~ @fn[[n ~i32], i32, {
+  k ~@comptime(i32) = 0;
+  k = n;
+  k
+}];
+g(1) == 1

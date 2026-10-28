@@ -1,0 +1,4 @@
+@struct{
+  fn ~~ @fn[[params ~@ast(), ret ~@ast()], @inlineast(),
+    '@fn[[body ~@ast()], @any(), @fn[`(params), `(ret), \`(body)]]];
+}

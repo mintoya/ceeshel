@@ -1,0 +1,19 @@
+// one builtin per question about a type; the mask ones ask a variable
+false ~@bool()~ 0 == 1;
+i32 ~~ @sint(); u8 ~~ @uint();
+P ~~ @struct{ x ~i32; y ~@arr[3, u8]; };
+Y ~~ @fieldtype(P, 1);
+add ~~ @fn[[a ~i32, b ~u8], i32, a + b];
+v ~i32 = 1;
+k ~i32 ~ 2;
+r ~@refT(i32) = v;
+p ~@ptr(@ptr(i32));
+(@countof(P) == 2) and (@fieldtype(P, 0) == i32)
+  and @ast_stringeq(@fieldname(P, 1), "y")
+  and (@countof(Y) == 3) and (@membertype(Y) == u8)
+  and (@membertype(@ptr(@ptr(i32))) == @ptr(i32))
+  and (@countof(add) == 3) and (@fieldtype(add, 1) == u8) and (@fieldtype(add, 2) == i32)
+  and (@ptrlevel(p) == 2) and (@ptrlevel(v) == 0)
+  and @isreferance(r) and (@isreferance(v) == false)
+  and @isconst(k) and (@isconst(v) == false) and (@isconst(r) == false)
+  and (@isvolatile(v) == false)

@@ -1,16 +1,6 @@
 @using @import @path "lib/optional.cshl";
+@using @import @path "lib/ify.cshl";
 i32 ~~ @sint();
-ify ~~ @fn[
-  [cnd~@ast(), a~@ast(),b~@ast()], @inlineast(),
-  { 
-  result ~~ @gensym(result);
-  '{
-    `result ~ @typeof(`a);
-    @if[`cnd,
-      `result = `a,
-      `result = (`b)];
-    `result
-  }}];
 first ~~ @fn[[n ~i32], ?(i32), 
   ify[n>0,
     n as (? i32),null]];

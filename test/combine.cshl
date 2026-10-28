@@ -1,0 +1,11 @@
+@using @import @path "lib/combine.cshl";
+a ~~ @struct {
+  one ~~ 1;
+};
+b ~~ @struct {
+  two ~~ 2;
+};
+c ~~ combine[a,b];
+(@countof(c) == 2)
+  and ( c.one == 1 )
+  and ( c.two == 2 );

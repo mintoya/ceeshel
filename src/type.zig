@@ -1,5 +1,6 @@
 const std = @import("std");
 const Asth = @import("ast.zig");
+const Type = @This();
 const SrcRef = Asth.SrcRef;
 const AstIdx = Asth.astpos;
 pub const builtins = enum(u8) {
@@ -30,6 +31,7 @@ pub const builtins = enum(u8) {
     arr,
     ptr,
     refT,
+    @"comptime",
     @"struct",
     this,
     ctype,
@@ -60,10 +62,18 @@ pub const builtins = enum(u8) {
     raw, // @raw(x): x with every operator name the builtin
     // reflection and layout
     typeof,
-    typeinfo,
     sizeof,
     alignof,
     offsetof,
+    countof,
+    membertype,
+    fieldname,
+    fieldtype,
+    ptrlevel,
+    isreferance,
+    isconst,
+    isvolatile,
+    iscomptime,
     // modules
     import,
     using,
@@ -123,7 +133,6 @@ pub const TypeBase = enum(u8) {
             .ast,
             .inlineast,
             .int,
-            .typeinfo,
             .type,
             .@"fn",
             => true,
@@ -170,13 +179,8 @@ pub const TypeBase = enum(u8) {
     ast,
     inlineast,
     int,
-    typeinfo,
     type,
     @"fn",
-};
-
-pub const TypeInfo = extern struct {
-    tag: [16]u8,
 };
 
 type: TypeBase,
@@ -184,6 +188,7 @@ maks: packed struct {
     @"volatile": bool = false,
     @"const": bool = false,
     ref: bool = false,
-    ptr: @Int(.unsigned, @bitSizeOf(u32) - 3) = 0,
+    @"comptime": bool = false,
+    ptr: @Int(.unsigned, @bitSizeOf(u32) - 4) = 0,
 },
 data: u32,

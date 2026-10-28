@@ -1,0 +1,10 @@
+// a module re-exporting its imports: combine merges their namespaces, = and ?(T) included
+@using @import @path "lib/combine.cshl";
+both ~~ combine[
+  @import @path "lib/optional.cshl",
+  @import @path "lib/math.cshl"
+];
+@using both;
+o ~?(i32) = 4;
+p ~?(i32) = null;
+o.present and (o.value == 4) and (p.present == (0 == 1)) and (double(3) == 6)

@@ -5,7 +5,6 @@ type ~~ @type();
 
 i32 ~~ @sint();
 
-// fn[params, ret] body: the parameters and return type now, the body next
 fn ~~ @fn[[params ~ast, ret ~ast], inline,
   '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
 

@@ -1,0 +1,14 @@
+// a struct's fields by index: @countof, @fieldname, and x.`(name) to reach one;
+// @cwhile lowers the body once per field, so i is known each time
+i32 ~~ @sint(); int ~~ @int();
+P ~~ @struct{ a ~i32; b ~i32; c ~i32; };
+sum ~~ @fn[[p ~P], i32, {
+  total ~i32 = 0;
+  i ~int = 0;
+  @cwhile[i < @countof(P), {
+    total = total + p.`(@fieldname(P, i));
+    i = i + 1;
+  }];
+  total
+}];
+sum([1, 2, 3]) == 6

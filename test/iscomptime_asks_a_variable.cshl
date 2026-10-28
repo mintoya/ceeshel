@@ -1,0 +1,9 @@
+// @iscomptime(x): whether x's value is known, of any type
+i32 ~~ @sint(); bool ~~ @bool();
+V ~~ @struct{ a ~i32; b ~bool; };
+P ~~ @struct{ x ~V; k ~V ~ [1, 0 == 0]; };
+p ~P = [[2, 0 == 1]];
+r ~bool = 1 == 1;
+c ~@comptime(i32) = 3;
+@iscomptime(P.k) and @iscomptime(c) and @iscomptime(4)
+  and (@iscomptime(p.x) == (0 == 1)) and (@iscomptime(r) == (0 == 1))

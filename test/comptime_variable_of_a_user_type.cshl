@@ -1,0 +1,12 @@
+// @comptime(T) assures a variable is known: a user type, here ?(i32), kept
+// and changed at compile time inside a runtime function
+@using @import @path "lib/optional.cshl";
+i32 ~~ @sint();
+g ~~ @fn[[n ~i32], i32, {
+  o ~@comptime(?(i32)) = null;
+  @if[o.present, @compileError("starts absent")];
+  o = 5;
+  a ~@arr[o.value, i32];
+  n + @countof(@typeof(a))
+}];
+g(1) == 6
