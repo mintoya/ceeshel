@@ -1,0 +1,3 @@
+i32 ~~ @sint();
+x ~i32 = 1;
+@compiles(x + 1) and (@compiles(y + 1) == (0 == 1)) and (x == 1)

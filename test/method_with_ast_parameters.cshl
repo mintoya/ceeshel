@@ -1,0 +1,22 @@
+// a method taking asts: the receiver arrives evaluated, once, under a name
+// at the call site; the other arguments arrive as syntax
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast();
+Box ~~ @struct{
+  v ~i32;
+  // this twice in the expansion: the receiver must still run once
+  twice_plus ~~ @fn[[this ~ast, e ~ast], inline, '((`this).v + (`this).v + `e)];
+  // e only expands when v is 0
+  or_else ~~ @fn[[this ~ast, e ~ast], inline, '{
+    r ~i32 = (`this).v;
+    @if[r == 0, r = `e];
+    r
+  }];
+};
+made ~i32 = 0;
+make ~~ @fn[[n ~i32], Box, { made = made + 1; b ~Box = [n]; b }];
+used ~i32 = 0;
+use ~~ @fn[[], i32, { used = used + 1; 7 }];
+a ~= make(3):twice_plus(1);
+b ~= make(5):or_else(use());
+c ~= make(0):or_else(use());
+(a == 7) and (made == 3) and (b == 5) and (c == 7) and (used == 1)

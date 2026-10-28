@@ -1,0 +1,5 @@
+// twice(x + 1) expands to (x + 1) + (x + 1) in the caller
+ast ~~ @ast(); inline ~~ @inlineast();
+twice ~~ @fn[[arg ~ast], inline, '(`(arg) + `(arg))];
+x ~@sint() = 6;
+twice(x + 1) == 14

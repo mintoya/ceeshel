@@ -1,0 +1,5 @@
+// error: DEFER_CONTROL
+@loop{
+  @defer(@break());
+  @break();
+}

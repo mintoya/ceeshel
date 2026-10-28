@@ -1,0 +1,9 @@
+// a . declared in a block is only that block's
+i32 ~~ @sint(); ast ~~ @ast();
+P ~~ @struct{ x ~i32; };
+p ~P = [1];
+inside ~~ {
+  @id(".") ~~ @fn[[o ~ast, n ~ast], @inlineast(), '(@raw((`o).`n) * 100)];
+  p.x
+};
+(inside == 100) and (p.x == 1)

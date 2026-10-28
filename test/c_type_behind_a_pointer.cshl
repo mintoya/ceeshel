@@ -1,0 +1,5 @@
+// compiled only
+@cinclude("<stdio.h>");
+file ~~ @ptr(@ctype("FILE"));
+out ~file = @cexpr[file, "stdout"];
+out != @cexpr[file, "(FILE *)0"]

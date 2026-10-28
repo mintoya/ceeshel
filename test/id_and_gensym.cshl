@@ -1,0 +1,5 @@
+// @id names anything, operators too; gensym names are new each time
+plus ~~ @id("+");
+a ~~ @gensym(t);
+b ~~ @gensym(t);
+@ast_stringeq(plus, "+") and (a != b) and a.id

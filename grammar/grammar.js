@@ -49,6 +49,10 @@ const isolated = {
 
 const cmp_operators = ['<', '>', '<=', '>=', '==', '!=', '<=>'];
 
+// Comparisons are isolated too, and don't even chain with themselves:
+// both sides are postfix operands, so `a + 1 < b` and `a < b < c` need
+// parentheses.
+
 // The operand levels, twice: suffix '' may start with an operator used as a
 // name (+[a, b]), suffix '_n' may not. The argument of juxtaposition is an
 // '_n' operand, so `a < b < c` is an error rather than `(a < b) (< c)`.
@@ -63,8 +67,8 @@ const operand_rules = s => ({
     alias($['_infix_op' + s], $.call),
     ...Object.keys(isolated).map(name => alias($[name + s], $.call)),
   )),
-  ['_cmp_op' + s]: $ => prec('operator', seq(field('argument', $['_add' + s]),
-    field('function', choice(...cmp_operators)), field('argument', $._add))),
+  ['_cmp_op' + s]: $ => prec('operator', seq(field('argument', $['_post' + s]),
+    field('function', choice(...cmp_operators)), field('argument', $._post))),
   ['_infix_op' + s]: $ => prec('chain', seq(
     field('argument', choice($['_post' + s], alias($['_infix_op' + s], $.call))),
     '<<', field('function', $._expression), '>>',
@@ -109,8 +113,9 @@ module.exports = grammar({
   precedences: $ => [['member-quote', 'postfix', 'quote', 'mark'], ['mul', 'add', 'chain', 'operator', 'operator-name']],
   // Precedence is a partial order, tightest first:
   //   postfix (. : tight call)
-  //   * / %  >  + -  >  comparison (does not chain)
-  //   and, or, xor, band, bor, bxor, shl, shr, as, <<f>>: unrelated
+  //   * / %  >  + -
+  //   comparison (does not chain), and, or, xor, band, bor, bxor, shl, shr,
+  //   as, <<f>>: unrelated to each other and to arithmetic
   //   juxtaposition  >  |>  >  = and ~
   rules: {
     // `;`-separated, empty statements allowed, final `;` optional

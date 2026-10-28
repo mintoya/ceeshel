@@ -1,0 +1,2 @@
+// error: LOOP_CONTROL_OUTSIDE_LOOP
+@break()

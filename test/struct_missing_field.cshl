@@ -1,0 +1,4 @@
+// error: MISSING_FIELD
+i32 ~~ @sint();
+P ~~ @struct{ x ~i32; y ~i32; };
+p ~P ~ [1]

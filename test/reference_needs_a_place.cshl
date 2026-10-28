@@ -1,0 +1,3 @@
+// error: NOT_ADDRESSABLE
+i32 ~~ @sint();
+r ~@refT(i32) = 1 + 2

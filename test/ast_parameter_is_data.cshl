@@ -1,0 +1,7 @@
+// error: UNBOUND_ID
+// an ast parameter is data: lowering it in the callee doesn't reach the
+// caller's names (that is what an inline result is for)
+i32 ~~ @sint(); ast ~~ @ast();
+inc ~~ @fn[[v ~ast], @void(), `v = `v + 1];
+f ~~ @fn[[], i32, { x ~i32 = 1; inc(x); x }];
+f() == 2

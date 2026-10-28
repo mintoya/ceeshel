@@ -1,0 +1,4 @@
+// a <<f>> b is f[a, b]
+i32 ~~ @sint();
+add ~~ @fn[[a ~i32, b ~i32], i32, a + b];
+((2 <<add>> 3) == 5) and ((1 <<add>> 2 <<add>> 3) == 6)

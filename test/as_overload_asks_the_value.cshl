@@ -1,0 +1,14 @@
+// the library as tries the target's __set, then the value's __as(T)
+@using @import @path "lib/optional.cshl";
+i32 ~~ @sint(); type ~~ @type();
+Celsius ~~ @struct{
+  Self ~~ @this();
+  deg ~i32;
+  __as ~~ @fn[[self ~Self, T ~type], T, @raw({ r ~T = [self.deg * 9 / 5 + 32]; r })];
+};
+F ~~ @struct{ deg ~i32; };
+c ~Celsius = [100];
+f ~= c as F;
+o ~= 4 as ?(i32);
+n ~= 7 as i32;
+(f.deg == 212) and o.present and (o.value == 4) and (n == 7)

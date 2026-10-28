@@ -1,0 +1,8 @@
+// a macro's own compile-time variable is its own, even under a runtime
+// condition; only one from outside the condition can't change there
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast();
+choose ~~ @fn[[x ~ast], inline, { r ~ast = '0; r = '(`x + 1); r }];
+n ~i32 = 5;
+m ~i32 = 0;
+@if[n > 3, m = choose(n)];
+m == 6

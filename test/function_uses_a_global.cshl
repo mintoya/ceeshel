@@ -1,0 +1,7 @@
+// top-level runtime variables are globals
+i32 ~~ @sint();
+counter ~i32 = 0;
+bump ~~ @fn[[], @void(), { counter = counter + 1; }];
+bump();
+bump();
+counter == 2

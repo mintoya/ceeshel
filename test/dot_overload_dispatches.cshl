@@ -1,0 +1,29 @@
+// . is a name: this one sends x.n to x:__get(n) when that compiles, and is
+// the builtin . otherwise: fields, namespaces, plain structs
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast(); bool ~~ @bool();
+// @if yields nothing, so the choice is made by returning an AST
+pick ~~ @fn[[c ~bool, yes ~ast, no ~ast], inline, { r ~ast = no; @if[c, r = yes]; r }];
+@id(".") ~~ @fn[[o ~ast, n ~ast], inline,
+  'pick[@compiles((`o):__get(`n)), (`o):__get(`n), @raw((`o).`n)]];
+
+V ~~ @struct{
+  Self ~~ @this();
+  a ~i32;
+  b ~i32;
+  // v.sum is computed, v.first is the place b; anything else isn't here
+  __get ~~ @fn[[self ~ast, name ~ast], inline, {
+    r ~ast = '@compileError("no such member");
+    @if[@ast_stringeq(name, "sum"), r = '@raw((`self).a + (`self).b)];
+    @if[@ast_stringeq(name, "first"), r = '@raw((`self).b)];
+    r
+  }];
+  total ~~ @fn[[v ~Self], i32, @raw(v.a + v.b)];
+};
+P ~~ @struct{ x ~i32; };
+
+v ~V = [3, 4];
+v.first = 10;
+p ~P = [1];
+p.x = p.x + 1;
+(v.sum == 13) and (v.a == 3) and (v.b == 10) and (V.total(v) == 13)
+  and (p.x == 2)

@@ -1,0 +1,2 @@
+// 'a is as tight as f(x): it can be an operand
+('a == 'a) and ('a != 'b)

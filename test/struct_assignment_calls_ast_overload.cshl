@@ -1,0 +1,11 @@
+// a = declared in a block is only that block's
+i32 ~~ @sint(); ast ~~ @ast();
+writes ~i32 = 0;
+x ~i32 = 0;
+{
+  @id("=") ~~ @fn[[t ~ast, v ~ast], @inlineast(), '@raw({ writes = writes + 1; `t = `v })];
+  x = 5;
+  x = 6;
+};
+x = 7;
+(x == 7) and (writes == 2)

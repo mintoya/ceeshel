@@ -1,0 +1,6 @@
+// as in cshl's examples/mutate.cshl: the second call reuses the instance
+type ~~ @type(); i32 ~~ @sint(); u8 ~~ @uint();
+calls ~= 0;
+count ~~ @fn[[T ~type], type, { calls = calls + 1; T }];
+count[i32]; count[i32]; count[u8];
+calls == 2

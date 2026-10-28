@@ -1,0 +1,6 @@
+// .id .num .str .call give the AST or the empty one, which is false
+x ~~ 'a;
+n ~~ '5;
+c ~~ '(f 1);
+(x.id == x) and (n.num == n) and (c.call == c) and (x.num == @get['a, 0])
+  and x.id and (c.id or n.num)

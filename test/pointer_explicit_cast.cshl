@@ -1,0 +1,4 @@
+x ~@sint() = 1;
+p ~@ptr(@sint()) = @where(x);
+q ~@ptr(@uint()) = p as @ptr(@uint());
+(q as @ptr(@sint())) == p

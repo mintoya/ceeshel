@@ -1,0 +1,8 @@
+i32 ~~ @sint();
+log ~i32 = 0;
+{
+  @defer(log = (log * 10) + 1);
+  @defer(log = (log * 10) + 2);
+  @defer(log = (log * 10) + 3);
+};
+log == 321

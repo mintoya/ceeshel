@@ -1,0 +1,14 @@
+// a:f(x) is T.f[a, x]; a reference parameter gets a itself
+i32 ~~ @sint();
+P ~~ @struct{
+  Self ~~ @this();
+  x ~i32;
+  y ~i32;
+  sum ~~ @fn[[self ~Self], i32, self.x + self.y];
+  move ~~ @fn[[self ~@refT(Self), dx ~i32], @void(), {
+    self.x = self.x + dx;
+  }];
+};
+p ~P = [1, 2];
+p:move(10);
+(p:sum() == 13) and (P.sum[p] == 13)

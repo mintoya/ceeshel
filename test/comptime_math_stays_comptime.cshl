@@ -1,0 +1,3 @@
+// literals are @int(), and math on them stays @int()
+a ~~ 3 + 4;
+(a == 7) and (@typeof(a) == @int())

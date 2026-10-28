@@ -1,0 +1,6 @@
+// <=> is the raw three-way comparison: -1, 0 or 1
+i32 ~~ @sint(); u32 ~~ @uint();
+a ~i32 = -5;
+b ~u32 = 7;
+((2 <=> 3) == -1) and ((3 <=> 3) == 0) and ((a <=> 4) == -1) and ((b <=> 2) == 1)
+  and (@typeof(a <=> 4) == i32)

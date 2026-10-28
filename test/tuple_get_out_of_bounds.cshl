@@ -1,0 +1,6 @@
+// error: INDEX_OUT_OF_BOUNDS
+any ~~ @any();
+i32 ~~ @sint();
+second ~~ @fn[[xs ~any], any, @get[xs, 2]];
+a ~i32 = 1;
+second[a, a]

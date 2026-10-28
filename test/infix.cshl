@@ -3,7 +3,7 @@ ast ~~ @ast();
 any ~~ @any();
 type ~~ @type();
 
-i32 ~~ @sint(32);
+i32 ~~ @sint();
 
 // fn[params, ret] body: the parameters and return type now, the body next
 fn ~~ @fn[[params ~ast, ret ~ast], inline,

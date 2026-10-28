@@ -1,0 +1,18 @@
+inline ~~ @inlineast();
+ast ~~ @ast();
+any ~~ @any();
+type ~~ @type();
+
+i32 ~~ @sint();
+
+// fn[params, ret] body: the parameters and return type now, the body next
+fn ~~ @fn[[params ~ast, ret ~ast], inline,
+  '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
+
+([i ~i32] <<fn>> i32 7)(6) == 7;
+
+z ~~ fn[[i ~i32], i32] i * 2;
+x ~~ [i ~i32] <<fn>> i32 i * 2;
+
+((z x 5) == 20) and
+(x[z[5]] == 20);

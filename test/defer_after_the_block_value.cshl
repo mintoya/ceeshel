@@ -1,0 +1,6 @@
+// the block's value is taken before its defers run
+i32 ~~ @sint();
+x ~i32 = 1;
+y ~~ { @defer (x = 100); x };
+(y == 1) 
+  and (x == 100)

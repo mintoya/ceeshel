@@ -1,0 +1,5 @@
+// \ leaves the unquote for later: x doesn't exist yet when later is quoted
+later ~~ '(\`(x));
+x ~~ 'y;
+y ~@sint() = 3;
+`(later) == 3

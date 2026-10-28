@@ -1,0 +1,14 @@
+// a lone any parameter takes the whole list as a tuple
+any ~~ @any();
+i32 ~~ @sint();
+sum ~~ @fn[[xs ~any], any, {
+  total ~i32 = 0;
+  i ~@int() = 0;
+  @cwhile[i < @len[xs], {
+    total = total + @get[xs, i];
+    i = i + 1;
+  }];
+  total
+}];
+a ~i32 = 4;
+(sum[1, 2, a] == 7) and (sum[a, a] == 8)

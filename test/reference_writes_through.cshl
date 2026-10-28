@@ -1,0 +1,7 @@
+// as cshl's referance_types
+i32 ~~ @sint();
+x ~i32 = 5;
+r ~@refT(i32) = x;
+r = 67;
+r = r + 1;
+x == 68

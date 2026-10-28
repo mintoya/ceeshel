@@ -1,0 +1,8 @@
+i32 ~~ @sint(); type ~~ @type();
+f ~~ @fn[[], i32, {
+  t ~~ @returntype();
+  g ~~ @fn[[], type, @returntype()];
+  @if[(t != i32) or (g() != type), @compileError("wrong return type")];
+  5
+}];
+f() == 5

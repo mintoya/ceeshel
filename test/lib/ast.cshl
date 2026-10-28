@@ -5,22 +5,22 @@ is ~~ @fn[[x ~ast, name ~any], bool,
 
 items ~~ @fn[[x ~ast], ast, @get[x, 1, @len[x]]];
 
-is_list  ~~ @fn[[x ~ast], bool, is[x, "[]"]];
-is_block ~~ @fn[[x ~ast], bool, is[x, "{}"]];
+is_list  ~~ @fn[[x ~ast], bool, is[`x, "[]"]];
+is_block ~~ @fn[[x ~ast], bool, is[`x, "{}"]];
 
-is_decl ~~ @fn[[x ~ast], bool, is[x, "~"] or is[x, "~="] or is[x, "~~"]];
+is_decl ~~ @fn[[x ~ast], bool, is[`x, "~"] or is[`x, "~="] or is[`x, "~~"]];
 decl_name ~~ @fn[[x ~ast], ast, @get[x, 1]];
 
 decl_type ~~ @fn[[x ~ast], ast, {
   r ~ast;
-  @if[is[x, "~"] or (@len[x] == 4),
+  @if[is[`x, "~"] or (@len[x] == 4),
     r = @get[x, 2]];
   r
 }];
 
 decl_value ~~ @fn[[x ~ast], ast, {
   r ~ast;
-  @if[is[x, "~"],
+  @if[is[`x, "~"],
     {},
     r = @get[x, @len[x] - 1]];
   r

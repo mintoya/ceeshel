@@ -1,0 +1,8 @@
+// name = v among arguments is an assignment, passed by position; naming a
+// parameter is name ~~ v
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast();
+x ~i32 = 0;
+twice ~~ @fn[[e ~ast], inline, '{ `e; `e }];
+f ~~ @fn[[a ~i32, b ~i32 = 1], i32, a + b];
+twice(x = x + 1);
+(x == 2) and (f(b ~~ 10, a ~~ 1) == 11) and (f(x = 7) == 8) and (x == 7)

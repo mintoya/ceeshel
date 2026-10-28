@@ -1,0 +1,2 @@
+// error: NO_DESTINATION
+x ~~ [1, 2]

@@ -1,0 +1,6 @@
+// the right side only runs when it decides the result: no division by zero
+i32 ~~ @sint();
+x ~i32 = 0;
+a ~~ (x == 0) or ((10 / x) == 1);
+b ~~ (x != 0) and ((10 / x) == 1);
+a and (b == (x != 0))

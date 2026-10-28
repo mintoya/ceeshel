@@ -1,0 +1,5 @@
+// error: NO_SUCH_METHOD
+i32 ~~ @sint();
+P ~~ @struct{ x ~i32; };
+p ~P = [1];
+p:missing()

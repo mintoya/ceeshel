@@ -1,0 +1,14 @@
+// calls are special: c(n) calls c's () member
+i32 ~~ @sint();
+Counter ~~ @struct{
+  Self ~~ @this();
+  n ~i32;
+  @id("()") ~~ @fn[[self ~@refT(Self), by ~i32], i32, {
+    self.n = self.n + by;
+    self.n
+  }];
+};
+c ~Counter = [0];
+c(5);
+c[2];
+(c(3) == 10) and (c.n == 10)

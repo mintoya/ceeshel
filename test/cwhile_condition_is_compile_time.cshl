@@ -1,0 +1,5 @@
+// error: RUNTIME_AT_COMPILE_TIME
+i32 ~~ @sint();
+x ~i32 = 1;
+@cwhile[x < 5, x = x + 1];
+x == 5

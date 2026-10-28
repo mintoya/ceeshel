@@ -1,0 +1,11 @@
+// sum of the odd numbers below 10
+i32 ~~ @sint();
+i ~i32 = 0;
+sum ~i32 = 0;
+@loop{
+  i = i + 1;
+  @if[i >= 10, @break()];
+  @if[(i % 2) == 0, @continue()];
+  sum = sum + i;
+};
+sum == 25

@@ -1,0 +1,2 @@
+// error: FIELD_ANY
+S ~~ @struct{ x ~@any(); }

@@ -1,0 +1,7 @@
+// compiled only
+@cinclude("<stdio.h>");
+i32 ~~ @sint();
+show ~~ @fn[[v ~i32], @void(), @cexpr[@void(), "fflush(stdout); (void)v"]];
+x ~i32 = @cexpr[i32, "6 * 7"];
+show(x);
+x == 42

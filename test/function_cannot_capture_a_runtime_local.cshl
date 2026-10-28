@@ -1,0 +1,8 @@
+// error: CAPTURES_RUNTIME
+i32 ~~ @sint();
+outer ~~ @fn[[x ~i32], i32, {
+  y ~i32 = x;
+  inner ~~ @fn[[], i32, y];
+  inner()
+}];
+outer(1)

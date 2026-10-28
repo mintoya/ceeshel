@@ -1,0 +1,7 @@
+// an overload only exists in the scope that declares it
+i32 ~~ @sint(); any ~~ @any();
+inside ~~ {
+  + ~~ @fn[[arg ~any], any, 99 as i32];
+  (1 + 2) == 99
+};
+inside and ((1 + 2) == 3)

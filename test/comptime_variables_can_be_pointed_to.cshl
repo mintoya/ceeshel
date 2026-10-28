@@ -1,0 +1,10 @@
+// compile-time variables are memory: references and pointers to them work,
+// and so do their fields
+type ~~ @type(); int ~~ @int();
+P ~~ @struct{ a ~int; t ~type; };
+p ~P = [1, @sint()];
+r ~@refT(P) = p;
+r.a = 5;
+q ~~ @where(p.a);
+@at(q) = @at(q) + 1;
+(p.a == 6) and (r.t == @sint())

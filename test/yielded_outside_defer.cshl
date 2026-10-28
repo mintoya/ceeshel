@@ -1,0 +1,2 @@
+// error: YIELDED_OUTSIDE_DEFER
+@yielded()

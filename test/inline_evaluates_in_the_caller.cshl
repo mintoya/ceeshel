@@ -1,0 +1,6 @@
+// syntax is evaluated where it was written by returning it as inline AST:
+// inc(x) expands to x = x + 1 inside f, where x is
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast();
+inc ~~ @fn[[v ~ast], inline, '(`v = `v + 1)];
+f ~~ @fn[[], i32, { x ~i32 = 1; inc(x); inc(x); x }];
+f() == 3

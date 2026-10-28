@@ -1,0 +1,4 @@
+// @apply maps over every child, the head included
+ast ~~ @ast();
+wrap ~~ @fn[[x ~ast], ast, '(`x + 1)];
+@apply[wrap, @get['[a, b], 1, 3]] == '((a + 1) (b + 1))

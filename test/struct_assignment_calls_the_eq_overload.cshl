@@ -1,0 +1,28 @@
+// = is a name: this one sends x = v and x ~T = v to x's __set when that
+// compiles, and assigns as the builtin does otherwise
+u32 ~~ @uint(); any ~~ @any();
+writes ~u32 = 0;
+split ~~ @struct{
+  Self ~~ @this();
+  lo ~u32;
+  hi ~u32;
+  __set ~~ @fn[[this ~@refT(Self), val ~u32], @void(), {
+    writes = writes + 1;
+    this.lo = val band 65535;
+    this.hi = (val shr 16) band 65535;
+  }];
+  whole ~~ @fn[[this ~Self], u32, this.lo bor (this.hi shl 16)];
+};
+@id("=") ~~ @fn[[target ~@refT(any), value ~any], @void(),
+  @raw(@if[@compiles(target:__set(value)), target:__set(value), target = value])];
+pair ~~ @struct{ first ~split; second ~split; };
+a ~split;
+a = 16909060;
+b ~pair;
+b.second = 3232235777;
+d ~split;
+d = 9;
+e ~split = d;
+c ~split = 66051;
+(a:whole() == 16909060) and (b.second:whole() == 3232235777) and (b.first:whole() == 0)
+  and (d:whole() == 9) and (e:whole() == 9) and (c:whole() == 66051) and (writes == 4)

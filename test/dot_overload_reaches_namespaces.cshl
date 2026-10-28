@@ -1,0 +1,9 @@
+// with . overloaded, T.name and imported namespaces still work through the
+// fallback, and so do the AST probes
+i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast(); bool ~~ @bool();
+pick ~~ @fn[[c ~bool, yes ~ast, no ~ast], inline, { r ~ast = no; @if[c, r = yes]; r }];
+@id(".") ~~ @fn[[o ~ast, n ~ast], inline,
+  'pick[@compiles((`o):__get(`n)), (`o):__get(`n), @raw((`o).`n)]];
+Ast ~~ @import(@path("lib/ast.cshl"));
+x ~~ '(a ~i32 = 1);
+Ast.is_decl(`x) and @ast_stringeq(Ast.decl_name(`x), "a") and (x.call == x)

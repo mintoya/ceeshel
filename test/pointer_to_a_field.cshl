@@ -1,0 +1,6 @@
+i32 ~~ @sint();
+P ~~ @struct{ x ~i32; y ~i32; };
+v ~P = [1, 2];
+p ~@ptr(i32) = @where(v.y);
+@at(p) = 9;
+v.y == 9

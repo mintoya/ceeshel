@@ -1,0 +1,2 @@
+s ~~ "a\n\0\x41";
+(@len[s] == 4) and (@get[s, 1] == 10) and (@get[s, 2] == 0) and (@get[s, 3] == 65)

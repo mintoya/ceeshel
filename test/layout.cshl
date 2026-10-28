@@ -1,0 +1,10 @@
+// layout is C's; the C output asserts these sizes too
+i8 ~~ @sint();
+i32 ~~ @sint();
+S ~~ @struct{ a ~i8; b ~i32; c ~i8; };
+E ~~ @struct{ k ~~ 1; };
+s ~S;
+e ~E;
+a ~@arr[3, i32];
+(@sizeof(S) == 12) and (@alignof(S) == 4) and (@offsetof[S, b] == 4) and (@offsetof[S, c] == 8)
+  and (@sizeof(E) == 0) and (@sizeof(@arr[3, i32]) == 12) and (@sizeof(@ptr(S)) == 8)

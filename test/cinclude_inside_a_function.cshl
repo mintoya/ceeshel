@@ -1,0 +1,3 @@
+// error: CINCLUDE_INSIDE_FUNCTION
+f ~~ @fn[[], @void(), @cinclude("<stdio.h>")];
+f()

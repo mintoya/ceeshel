@@ -1,0 +1,5 @@
+type ~~ @type(); any ~~ @any(); i32 ~~ @sint(); u8 ~~ @uint();
+add ~~ @fn[[T ~type], any, {
+  @fn[[a ~T, b ~T], T, a + b]
+}];
+(add[i32] == add[i32]) and (add[i32] != add[u8])

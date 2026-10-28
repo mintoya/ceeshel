@@ -1,0 +1,4 @@
+// macros see the raw tree: the head is child 0 and @len counts it
+x ~~ '(a + b);
+(@len[x] == 3) and @ast_stringeq(@get[x, 0], "+") and @ast_stringeq(@get[x, 2], "b")
+  and (@len['a] == 0) and (@get[x, 3] == @get['a, 0])

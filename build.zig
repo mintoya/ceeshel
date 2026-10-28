@@ -55,4 +55,9 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(mod_tests);
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);
+    // every test/*.cshl: its last expression must be true
+    const run_cshl = b.addRunArtifact(exe);
+    run_cshl.addArgs(&.{ "--tests", "test" });
+    run_cshl.has_side_effects = true;
+    test_step.dependOn(&run_cshl.step);
 }

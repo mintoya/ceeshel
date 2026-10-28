@@ -1,0 +1,2 @@
+// error: IMPORT_CYCLE
+@import(@path())

@@ -1,0 +1,8 @@
+// error: COMPTIME_STRUCT_RUNTIME_FIELD
+// a literal beside a runtime struct has no integer type to take, so the
+// tuple stays compile-time and can't hold the struct
+any ~~ @any();
+P ~~ @struct{ x ~@sint(); };
+first ~~ @fn[[arg ~any], any, arg.0];
+p ~P = [1];
+first[[1, p]]

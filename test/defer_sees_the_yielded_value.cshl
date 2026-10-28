@@ -1,0 +1,5 @@
+// @yielded() in a deferred body is what its scope gave
+i32 ~~ @sint();
+seen ~i32 = 0;
+y ~~ { @defer(seen = @yielded() * 2); 21 };
+(y == 21) and (seen == 42)

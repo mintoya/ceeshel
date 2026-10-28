@@ -1,0 +1,13 @@
+@struct{
+  ify ~~ @fn[
+    [cnd~@ast(), a~@ast(),b~@ast()], @inlineast(),
+    { 
+    result ~~ @gensym(result);
+    '{
+      `result ~ @typeof(`a);
+      @if[`cnd,
+        `result = `a,
+        `result = (`b)];
+      `result
+  }}];
+}

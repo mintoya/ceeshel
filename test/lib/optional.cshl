@@ -1,0 +1,51 @@
+// cshl's ? from examples/module.cshl. ?(T) holds a T or nothing: a T
+// assigned to it is present, null is absent, another ?(T) is copied. The =
+// here sends x = v (and x ~T = v) to x's __set when that compiles.
+type ~~ @type(); bool ~~ @bool(); ast ~~ @ast(); any ~~ @any(); void ~~ @void();
+inline ~~ @inlineast();
+Null ~~ @struct{ unit ~@int(); };
+null ~Null ~ [0];
+? ~~ @fn[[T ~type], type, @struct{
+  Self ~~ @this();
+  present ~bool;
+  value ~T;
+  __set ~~ @fn[[this ~@refT(Self), o ~any], void, @raw(
+    @if[@typeof(o) == Null, { this.present = 0 == 1; },
+      @if[@typeof(o) == Self, {
+        this.present = o.present;
+        @if[o.present, this.value = o.value];
+      }, {
+        this.value = o;
+        this.present = 1 == 1;
+      }]])];
+  // x:orelse(d): x's value if present, otherwise d, which only runs then
+  orelse ~~ @fn[[this ~ast, a ~ast], inline, {
+    s ~~ @gensym();
+    r ~~ @gensym();
+    '{
+      `(s) ~= `(this);
+      `(r) ~@typeof((`(s)).value);
+      @if[(`(s)).present, `(r) = (`(s)).value, `(r) = `(a)];
+      `(r)
+    }
+  }];
+}];
+@id("=") ~~ @fn[[target ~@refT(any), value ~any], @void(),
+  @raw(@if[@compiles(target:__set(value)), target:__set(value), target = value])];
+// v as T builds a T through T's __set, or else v's __as, when that compiles
+@id("as") ~~ @fn[[value ~any, T ~type], T, @raw({
+  r ~T;
+  @if[@compiles(r:__set(value)),
+    r:__set(value),
+    @if[@compiles(value:__as(T)),
+      r = value:__as(T),
+      r = value as T]];
+  r
+})];
+@struct{
+  ? ~~ ?;
+  null ~~ null;
+  Null ~~ Null;
+  @id("=") ~~ `(@id("="));
+  @id("as") ~~ `(@id("as"));
+}

@@ -1,0 +1,6 @@
+// a function whose only parameter is any takes the whole list as a tuple
+any ~~ @any(); i32 ~~ @sint();
+count ~~ @fn[[xs ~any], any, @len[xs]];
+first ~~ @fn[[xs ~any], any, @get[xs, 0]];
+n ~i32 = 2;
+(count[1, 2, 3] == 3) and (first[n, 5] == 2)

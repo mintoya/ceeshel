@@ -1,0 +1,4 @@
+// an import's value is compile-time; using it inside a function is fine
+i32 ~~ @sint();
+f ~~ @fn[[], i32, { m ~~ @import(@path("lib/math.cshl")); m.double(3) }];
+f() == 6

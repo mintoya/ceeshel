@@ -1,0 +1,26 @@
+@using @import @path "lib/optional.cshl";
+i32 ~~ @sint();
+ify ~~ @fn[
+  [cnd~@ast(), a~@ast(),b~@ast()], @inlineast(),
+  { 
+  result ~~ @gensym(result);
+  '{
+    `result ~ @typeof(`a);
+    @if[`cnd,
+      `result = `a,
+      `result = (`b)];
+    `result
+  }}];
+first ~~ @fn[[n ~i32], ?(i32), 
+  ify[n>0,
+    n as (? i32),null]];
+a ~= first(0);
+b ~= first(5);
+c ~? i32= b;
+d ~? i32= 7;
+calls ~i32 = 0;
+anyref ~~ @refT(@any());
+fallback ~~ @fn[[], i32, { calls = calls + 1; 9 }];
+(a.present == (0 == 1)) and b.present and (b.value == 5)
+  and (c.value == 5) and (d.value == 7)
+  and (a:orelse(fallback()) == 9) and (b:orelse(fallback()) == 5) and (calls == 1)

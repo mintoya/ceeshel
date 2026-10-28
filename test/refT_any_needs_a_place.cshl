@@ -1,0 +1,4 @@
+// error: NOT_ADDRESSABLE
+any ~~ @any();
+bump ~~ @fn[[x ~@refT(any)], @void(), x = x + 1];
+bump(1 + 2)

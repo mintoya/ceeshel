@@ -1,0 +1,9 @@
+// @cwhile runs during lowering, the whole body each pass; n and total are
+// compile-time
+n ~= 0;
+total ~= 0;
+@cwhile[n < 5, {
+  total = total + n;
+  n = n + 1;
+}];
+total == 10

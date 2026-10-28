@@ -72,7 +72,7 @@ pub const Ast = union(enum(u8)) {
         defer parts.deinit(ctx.alloc);
         var head: ?Part = null;
         if (std.mem.eql(u8, kind, "call")) {
-            if (node.childByFieldName("name")) |name| {
+            if (namedField(node, "name")) |name| {
                 var marks: [2]u8 = undefined;
                 var n: usize = 0;
                 var i: u32 = 0;
@@ -86,19 +86,33 @@ pub const Ast = union(enum(u8)) {
                 const has_value = node.childByFieldName("value") != null;
                 head = .{ .text = if (!has_value) "~" else if (marks[n - 1] == '=') "~=" else "~~" };
                 try parts.append(ctx.alloc, .{ .node = name });
-                if (node.childByFieldName("type")) |t| try parts.append(ctx.alloc, .{ .node = t });
-                if (node.childByFieldName("value")) |v| try parts.append(ctx.alloc, .{ .node = v });
+                if (namedField(node, "type")) |t| try parts.append(ctx.alloc, .{ .node = t });
+                if (namedField(node, "value")) |v| try parts.append(ctx.alloc, .{ .node = v });
             } else {
+                var bracket: u8 = 0;
                 var i: u32 = 0;
                 while (i < node.childCount()) : (i += 1) {
-                    const field = node.fieldNameForChild(i) orelse continue;
                     const c = node.child(i).?;
+                    if (!c.isNamed() and std.mem.indexOfScalar(u8, "([", c.kind()[0]) != null and bracket == 0) bracket = c.kind()[0];
+                    const field = node.fieldNameForChild(i) orelse continue;
                     if (!c.isNamed() and std.mem.indexOfScalar(u8, "()[]", c.kind()[0]) != null) continue;
                     if (std.mem.eql(u8, field, "function")) {
                         head = .{ .node = c };
                     } else if (std.mem.eql(u8, field, "argument")) {
                         try parts.append(ctx.alloc, .{ .node = c });
                     }
+                }
+                // a quote mark against [a, b] or (a, b) quotes the list: '[a, b] is '([a, b])
+                const marks = [_][]const u8{ "'", "`", "\\", ".." };
+                const h = head.?.node;
+                const is_mark = std.mem.eql(u8, h.kind(), "id") and for (marks) |m| {
+                    if (std.mem.eql(u8, text_of(ctx, fileref, h), m)) break true;
+                } else false;
+                if (is_mark and (bracket == '[' or (bracket == '(' and parts.items.len != 1))) {
+                    const nodes = try ctx.alloc.alloc(ts.Node, parts.items.len);
+                    for (nodes, parts.items) |*n, p| n.* = p.node;
+                    parts.clearRetainingCapacity();
+                    try parts.append(ctx.alloc, .{ .list = .{ .nodes = nodes, .at = node } });
                 }
             }
         } else {
@@ -111,7 +125,26 @@ pub const Ast = union(enum(u8)) {
             }
         }
 
-        const count = parts.items.len + @intFromBool(head != null);
+        return build(ctx, fileref, node, head, parts.items);
+    }
+
+    // the node in a field: a field on a hidden (x) is on its parentheses too
+    fn namedField(node: ts.Node, field: []const u8) ?ts.Node {
+        var i: u32 = 0;
+        while (i < node.childCount()) : (i += 1) {
+            const f = node.fieldNameForChild(i) orelse continue;
+            const c = node.child(i).?;
+            if (c.isNamed() and std.mem.eql(u8, f, field)) return c;
+        }
+        return null;
+    }
+
+    fn text_of(ctx: *AstState, fileref: filepos, node: ts.Node) []const u8 {
+        return ref(fileref, node).toslice(ctx.files);
+    }
+
+    fn build(ctx: *AstState, fileref: filepos, node: ts.Node, head: ?Part, parts: []const Part) Allocator.Error!Ast {
+        const count = parts.len + @intFromBool(head != null);
         const start: astpos = @intCast(ctx.asts.items.len);
         try ctx.asts.appendNTimes(ctx.alloc, .null, count + 1);
         var slot = start;
@@ -120,7 +153,7 @@ pub const Ast = union(enum(u8)) {
             ctx.asts.items[slot] = a;
             slot += 1;
         }
-        for (parts.items) |p| {
+        for (parts) |p| {
             const a = try p.ast(ctx, fileref);
             ctx.asts.items[slot] = a;
             slot += 1;
@@ -132,8 +165,16 @@ pub const Ast = union(enum(u8)) {
     const Part = union(enum) {
         node: ts.Node,
         text: []const u8,
+        list: struct { nodes: []const ts.Node, at: ts.Node }, // a [] list of these
         fn ast(self: Part, ctx: *AstState, fileref: filepos) Allocator.Error!Ast {
             switch (self) {
+                .list => |l| {
+                    defer ctx.alloc.free(l.nodes);
+                    const parts = try ctx.alloc.alloc(Part, l.nodes.len);
+                    defer ctx.alloc.free(parts);
+                    for (parts, l.nodes) |*p, n| p.* = .{ .node = n };
+                    return build(ctx, fileref, l.at, .{ .text = "[]" }, parts);
+                },
                 .node => |n| {
                     if (!n.isNamed()) return .{ .id = ref(fileref, n) };
                     return convert(ctx, fileref, n);
@@ -176,6 +217,7 @@ pub const AstState = struct {
     pub fn init(allocator: anytype) !@This() {
         var result = @This(){ .alloc = allocator, .files = .empty, .asts = .empty };
         try result.files.append(allocator, .{ .name = "<generic>", .content = .{ .buffer = .empty } });
+        try result.asts.append(allocator, .null); // slot 0: the empty AST
         return result;
     }
     pub fn deinit(self: *@This()) void {

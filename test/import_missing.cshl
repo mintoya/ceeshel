@@ -1,0 +1,2 @@
+// error: IMPORT_MISSING
+@import(@path("lib/nothing.cshl"))

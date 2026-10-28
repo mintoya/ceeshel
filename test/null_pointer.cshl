@@ -1,0 +1,3 @@
+p ~@ptr(@sint());
+q ~@ptr(@sint());
+p == q

@@ -1,0 +1,4 @@
+// ~~ inside a struct is a namespace constant, not a field
+i32 ~~ @sint();
+P ~~ @struct{ origin ~~ 7; x ~i32; };
+P.origin == 7

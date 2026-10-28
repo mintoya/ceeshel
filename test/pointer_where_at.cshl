@@ -1,0 +1,6 @@
+// as cshl's where_at_alias
+i32 ~~ @sint();
+x ~i32 = 1;
+p ~@ptr(i32) = @where(x);
+@at(p) = 5;
+(x == 5) and (@at(p) == 5) and (p == @where(x))

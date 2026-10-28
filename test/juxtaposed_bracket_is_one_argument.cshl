@@ -1,0 +1,15 @@
+// only a tight f[...] is an argument list: f [...] passes the list as one
+// argument, as f (...) passes the group
+ast ~~ @ast(); any ~~ @any(); inline ~~ @inlineast(); i32 ~~ @sint();
+fn ~~ @fn[[params ~ast, ret ~ast], inline,
+  '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
+somevalue ~ @struct {
+  value ~ i32;
+  __add ~~ [a~@this(),b~@this()] <<fn>> @this()
+    [value ~~ (a.value + b.value)];
+};
+somevalue = [value ~~ 1];
+somevalue = somevalue :__add somevalue;
+P ~~ @struct{ x ~i32; y ~i32; };
+sum ~~ @fn[[p ~P], i32, p.x + p.y];
+(somevalue.value == 2) and ((sum [1, 2]) == 3)

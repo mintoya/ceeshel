@@ -1,0 +1,2 @@
+// a file is lowered once; importing it again gives the same value
+@import(@path("lib/math.cshl")) == @import(@path("lib/math.cshl"))

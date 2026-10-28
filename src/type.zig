@@ -42,13 +42,12 @@ pub const builtins = enum(u8) {
     loop,
     @"break",
     @"continue",
-    cloop,
-    cbreak,
-    ccontinue,
+    cwhile,
     @"defer",
     // places
     where,
     at,
+    ref,
     // ast metaprogramming
     len,
     get,
@@ -58,20 +57,23 @@ pub const builtins = enum(u8) {
     id,
     compileError,
     compiles,
+    raw, // @raw(x): x with every operator name the builtin
     // reflection and layout
     typeof,
     typeinfo,
     sizeof,
     alignof,
     offsetof,
-    // modules and C
+    // modules
     import,
     using,
     path,
+    //c
     cinclude,
-    cout,
+    cexpr,
 
     // operators, overloading relies on overloading
+    // call is not here because it cannot be overloaded like normal
     add,
     sub,
     mul,
@@ -85,6 +87,16 @@ pub const builtins = enum(u8) {
     ge,
     @"and",
     @"or",
+    band,
+    bor,
+    bxor,
+    shl,
+    shr,
+    xor,
+    as,
+    cmp, // <=>
+    set, // =
+    dot, // .
 };
 pub const TypeBase = enum(u8) {
     pub fn is_rtint(self: @This()) bool {
@@ -113,7 +125,7 @@ pub const TypeBase = enum(u8) {
             .int,
             .typeinfo,
             .type,
-            .function,
+            .@"fn",
             => true,
             else => false,
         };
@@ -165,7 +177,6 @@ pub const TypeBase = enum(u8) {
 
 pub const TypeInfo = extern struct {
     tag: [16]u8,
-    data: union {},
 };
 
 type: TypeBase,

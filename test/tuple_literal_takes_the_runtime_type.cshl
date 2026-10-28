@@ -1,0 +1,4 @@
+i32 ~~ @sint(); any ~~ @any(); type ~~ @type();
+ty ~~ @fn[[arg ~any], type, @typeof(arg)];
+n ~i32 = 3;
+(ty[n, 4] == ty[n, n]) and (ty[4, n] == ty[n, n])

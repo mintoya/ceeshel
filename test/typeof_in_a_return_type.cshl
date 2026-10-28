@@ -1,0 +1,5 @@
+// the return type sees runtime parameters, for their types
+any ~~ @any(); u32 ~~ @uint();
+id ~~ @fn[[arg ~any], @typeof(arg), arg];
+v ~u32 = 7;
+(@typeof(id v) == u32) and (id(v) == 7)

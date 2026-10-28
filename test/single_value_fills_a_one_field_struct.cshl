@@ -1,0 +1,3 @@
+i32 ~~ @sint();
+inc ~~ @fn[[a ~i32], i32, a + 1];
+(inc(1) == 2) and ((inc 1) == 2) and (inc[1] == 2)

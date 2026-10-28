@@ -1,0 +1,3 @@
+// a list is a call headed []: there's nothing else to test
+is_list ~~ @fn[[x ~@ast()], @bool(), @ast_stringeq(@get[x, 0], "[]")];
+is_list([1, 2]) and (is_list({1; 2}) == (0 == 1))

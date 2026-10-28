@@ -1,0 +1,6 @@
+// error: NO_SUCH_METHOD
+// a value that isn't a function is called through its () member
+i32 ~~ @sint();
+P ~~ @struct{ n ~i32; };
+p ~P = [0];
+p(5)
