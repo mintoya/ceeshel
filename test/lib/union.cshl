@@ -1,17 +1,10 @@
 @using @import @path "fn.cshl";
+@using @import @path "types.cshl";
+
 Ast ~~  @import @path "ast.cshl";
-// @using @import @path "combine.cshl";
-ast ~~ @ast();
-any ~~ @any();
-type ~~ @type();
-int ~~ @int();
-bool ~~ @bool();
-inline ~~ @inlineast();
 
 // @if yields nothing, so the choice is made by returning an AST
 pick ~~ [c ~bool, yes ~ast, no ~ast] <<fn>> inline { r ~ast = no; @if[c, r = yes]; r };
-// x.n is x:__dot(n) when that compiles, the builtin . otherwise; it expands
-// where it's written, so a member that is a place stays one
 @id(".") ~~ [right ~ast, left ~ast] <<fn>> inline
   'pick[@compiles((`right):__dot(`left)), (`right):__dot(`left), @raw((`right).`left)];
 

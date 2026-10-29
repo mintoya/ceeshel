@@ -1,0 +1,10 @@
+@using @import @path "combine.cshl";
+@struct {
+  Ast ~~ @import @path "ast.cshl";
+} 
+  |> combine[_,@import @path "fn.cshl"]
+  |> combine[_,@import @path "ify.cshl"]
+  |> combine[_,@import @path "closure.cshl"]
+  |> combine[_,@import @path "combine.cshl"]
+  |> combine[_,@import @path "types.cshl"]
+  |> combine[_,@import @path "overloads.cshl"]

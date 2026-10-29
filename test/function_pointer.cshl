@@ -1,0 +1,24 @@
+// a function becomes a function pointer where one is wanted, if its
+// parameters are exactly the pointer's (no specializing); calls go through
+// it, and it is a runtime value: copied, swapped, passed, kept in a struct
+i32 ~~ @sint(); bool ~~ @bool(); type ~~ @type();
+add ~~ @fn[[a ~i32, b ~i32], i32, a + b];
+sub ~~ @fn[[a ~i32, b ~i32], i32, a - b];
+Op ~~ @fnptr[[i32, i32], i32];
+apply ~~ @fn[[f ~Op, x ~i32], i32, f(x, 10)];
+p ~Op = add;
+q ~= sub as Op;
+first ~= p(1, 2);
+t ~Op = p; p = q; q = t;
+flag ~bool = 1 == 1;
+r ~Op = add;
+@if[flag, r = sub];
+Box ~~ @struct{ op ~Op; };
+box ~Box = [add];
+// a generic one goes through a wrapper
+gen ~~ @fn[[T ~type, a ~T], T, a];
+id ~Op = @fn[[a ~i32, b ~i32], i32, gen(i32, a)];
+k ~@comptime(i32) = 4;
+wide ~@fnptr[[@comptime(i32), i32], @comptime(i32)] = add;
+(wide(k, 1) == 5) and (@typeof(wide) == Op) and (first == 3) and (p(5, 2) == 3) and (q(5, 2) == 7) and (apply(add, 1) == 11)
+  and (r(9, 4) == 5) and (box.op(2, 3) == 5) and (id(7, 0) == 7)

@@ -1,0 +1,6 @@
+@using @import @path "fn.cshl";
+@using @import @path "types.cshl";
+n ~int = 0;
+bump ~~ [c ~@ptr(int)] <<fn>> int {
+  @at c = (@at c) + 1; @at c };
+@struct{ count ~~ @where n; bump ~~ bump; }

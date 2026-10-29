@@ -3,6 +3,7 @@
 // argument, so there's no callback and no early exit; and since the error is
 // what the block yields, @yielded() in a defer makes errdefer.
 i32 ~~ @sint(); bool ~~ @bool(); ast ~~ @ast(); inline ~~ @inlineast(); type ~~ @type();
+false ~@comptime(@bool())~ (0 == 1);
 Result ~~ @fn[[T ~type], type, @struct{
   Self ~~ @this();
   ok ~bool;
@@ -18,6 +19,15 @@ Result ~~ @fn[[T ~type], type, @struct{
       `out
     }
   }];
+  catch ~~ @fn[[this ~ast,otherwise~ast],inline,{
+    result ~~ @gensym(result);
+    '{
+      `result ~= `this;
+      @if[(`result).ok == false, 
+        (`result).value = `otherwise]
+      (`result).value
+    }
+  }];
 }];
 R ~~ Result(i32);
 okv ~~ @fn[[v ~i32], R, { r ~R = [1 == 1, v, 0]; r }];
@@ -26,11 +36,17 @@ half ~~ @fn[[n ~i32], R, { r ~R; @if[(n % 2) == 0, r = okv(n / 2), r = fail(n)];
 // the error is what the block yields, so a defer sees it: errdefer
 cleanups ~i32 = 0;
 quarter ~~ @fn[[n ~i32], R, {
-  @defer(@if[(@yielded()).ok == (0 == 1), cleanups = cleanups + 1]);
-  half(n):try[h, half(h):try[q, okv(q)]]
+  @defer @if[(@yielded()).ok == false,
+    cleanups = cleanups + 1];
+  half(n):try[h,
+    half(h):try[q,
+      okv(q)
+  ]]
 }];
 a ~= quarter(12);
 b ~= quarter(6);
 c ~= quarter(5);
-(a.ok and (a.value == 3)) and ((b.ok == (0 == 1)) and (b.err == 3)) and (c.err == 5)
+(a.ok and (a.value == 3))
+  and ((b.ok == false) and (b.err == 3))
+  and (c.err == 5)
   and (cleanups == 2)

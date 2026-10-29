@@ -1,0 +1,35 @@
+@using @import @path "types.cshl";
+@using @import @path "fn.cshl";
+
+@id(".") ~~ [right ~ast, left ~ast] <<fn>> inline {
+  r ~~ @gensym(r);
+  '{
+    `r ~@ast() = '(@raw((`right).`left));
+    @if[@compiles((`right):__dot(`left)),
+      `r = '((`right):__dot(`left))];
+    (\`)(`r)
+  }
+};
+@id("=") ~~ [target ~anyref, value ~any] <<fn>> @refT(@typeof(target)) @raw({
+  @if[@compiles(target:__set(value)),
+    target:__set(value),
+    @if[@compiles(value:__as(@typeof(target))),
+      target = value:__as(@typeof(target)),
+      target = value]];
+  target
+});
+@id("as") ~~ [value ~any, T ~type] <<fn>> T @raw({
+  r ~T;
+  @if[@compiles(value:__as(T)),
+    r = value:__as(T),
+    @if[@compiles(r:__set(value)),
+      r:__set(value),
+      r = value as T]];
+  r
+});
+
+@struct {
+  `@id(".") ~~ `@id(".");
+  `@id("=") ~~ `@id("=");
+  `@id("as") ~~ `@id("as");
+}

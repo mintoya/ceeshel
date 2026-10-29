@@ -16,6 +16,7 @@ const Options = struct {
     ir: bool = false,
     tests: ?[]const u8 = null,
     noc: bool = false,
+    nolines: bool = false,
     // stdin: bool = false,
     out: ?[]const u8 = null,
 
@@ -32,6 +33,7 @@ const Options = struct {
             .ir = "print the lowered IR",
             .tests = "run every .cshl file in the directory [file] as a test",
             .noc = "with --tests: don't compile the C (with tcc)",
+            .nolines = "with -o: no #line directives pointing back at the source",
             .out = "write the program as C to this file",
             // .stdin = "parse from stdin",
         },
@@ -113,7 +115,7 @@ pub fn main(init: std.process.Init) !u8 {
         return 0;
     }
     if (parsed.options.out) |path| {
-        try writeC(&unit, init.io, path);
+        try writeC(&unit, init.io, path, !parsed.options.nolines);
         return 0;
     }
     var it = Interp.init(&unit.sema) catch |e| return report(&unit, &out, e);
@@ -123,9 +125,9 @@ pub fn main(init: std.process.Init) !u8 {
     return 0;
 }
 
-fn writeC(unit: *Unit, io: std.Io, path: []const u8) !void {
+fn writeC(unit: *Unit, io: std.Io, path: []const u8, lines: bool) !void {
     var c: std.Io.Writer.Allocating = .init(unit.arena.allocator());
-    try EmitC.emit(&unit.sema, &c.writer);
+    try EmitC.emit(&unit.sema, &c.writer, lines);
     try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = path, .data = c.written() });
 }
 
@@ -218,7 +220,8 @@ fn runTest(unit: *Unit, io: std.Io, path: [:0]const u8, name: []const u8, compil
     if (!compile) return .pass;
 
     const c_path = try std.fmt.allocPrint(a, "{s}/{s}.c", .{ c_dir, name });
-    writeC(unit, io, c_path) catch |e| return .{ .fail = try std.fmt.allocPrint(a, "emitting C: {t}", .{e}) };
+    // without #line, so a C error points at the C
+    writeC(unit, io, c_path, false) catch |e| return .{ .fail = try std.fmt.allocPrint(a, "emitting C: {t}", .{e}) };
     const run = try std.process.run(a, io, .{ .argv = &.{ "tcc", "-run", c_path } });
     if (run.term.success()) return .pass;
     if (run.stderr.len > 0) return .{ .fail = try std.fmt.allocPrint(a, "compiled ({s}): {s}", .{ c_path, run.stderr }) };

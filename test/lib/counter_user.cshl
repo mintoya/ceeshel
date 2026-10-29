@@ -1,0 +1,2 @@
+C ~~ @import @path "counter.cshl";
+C.bump(C.count)

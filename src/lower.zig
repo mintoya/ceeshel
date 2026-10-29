@@ -28,7 +28,7 @@ pub const Inst = struct {
     pub const Data = union(enum) {
         arg: u32,
         global: u32, // the address of global n
-        alloc, // the address of a new local
+        alloc: []const u8, // the address of a new local, named as in the source ("" for a temporary)
         load: Ref, // through an address or a reference
         store: struct { place: Ref, value: Ref },
         cast: Ref, // between integer types
@@ -37,6 +37,7 @@ pub const Inst = struct {
         // and/or: rhs_body only runs when lhs doesn't decide
         short: struct { op: Builtin, lhs: Ref, rhs_body: []const InstIdx, rhs: Ref },
         call: struct { func: u32, args: []const Ref },
+        call_ptr: struct { callee: Ref, args: []const Ref }, // through a function pointer
         cond: struct { cond: Ref, then: []const InstIdx, @"else": []const InstIdx },
         loop: []const InstIdx,
         brk,
@@ -610,6 +611,7 @@ fn coerce(s: *Sema, b: *Block, at: astpos, r: Res, dest: ?typeid) Error!Ref {
     const x = try s.rvalue(b, at, r);
     if (s.ty(to).maks.@"comptime" and x == .inst) return s.fail(at, "RUNTIME_AT_COMPILE_TIME", "{f} is assured to be known", .{s.fmtType(to)});
     const from = s.typeOf(b.func, x);
+    if (from == s.t.@"fn" and s.fnptrOf(to) != null) return .{ .value = try s.fnPointer(at, asU32(x.value), to) };
     if (from == to or (try s.unconst(from)) == (try s.unconst(to))) return s.retypeValue(b, at, x, to);
     const asts = [_]typeid{ s.t.ast, s.t.inlineast };
     if (std.mem.indexOfScalar(typeid, &asts, from) != null and std.mem.indexOfScalar(typeid, &asts, to) != null)
@@ -631,7 +633,7 @@ fn retypeValue(s: *Sema, b: *Block, at: astpos, x: Ref, to: typeid) Error!Ref {
 fn temporary(s: *Sema, b: *Block, at: astpos, t: typeid) Error!Res {
     if (s.isComptime(t) or b.func == null)
         return .{ .place = .{ .value = try s.vAddr(try s.ptrTo(t), try s.comptimeMem(b, at, try s.zero(at, t))) } };
-    return .{ .place = try s.emit(b, at, try s.ptrTo(t), .alloc) };
+    return .{ .place = try s.emit(b, at, try s.ptrTo(t), .{ .alloc = "" }) };
 }
 // a condition: a bool, or an AST (empty is false)
 fn condition(s: *Sema, b: *Block, sc: *Scope, a: astpos) Error!Ref {
@@ -843,6 +845,9 @@ fn lowerCall(s: *Sema, b: *Block, sc: *Scope, a: astpos, dest: ?typeid) Error!Re
         if (v.type == s.t.builtin) return s.callBuiltin(b, sc, a, @fromBackingInt(@intCast(asU32(v))), args, dest);
         if (v.type == s.t.@"fn") return s.callFn(b, sc, a, asU32(v), try s.astArgs(args), dest);
     }
+    // a function pointer is called through
+    const held = try s.heldType(b, callee);
+    if (s.fnptrOf(if (s.isRef(held)) try s.pointee(held) else held)) |sig| return s.callPointer(b, sc, a, head, callee, sig.params, sig.ret, args);
     // calls are special: any other value is called through its () member
     return s.callMember(b, sc, a, callee, head, head, "()", args, dest);
 }
@@ -936,6 +941,65 @@ fn typeParts(s: *Sema, at: astpos, v: Value) Error![]const typeid {
         return out;
     }
     return s.fail(at, "TYPE_MISMATCH", "a struct, a function or a function pointer, not {f}", .{s.fmtType(t)});
+}
+
+// ---- function pointers
+
+fn fnptrOf(s: *Sema, t: typeid) ?struct { params: []const typeid, ret: typeid } {
+    const x = s.ty(t);
+    if (x.type != .fnptr or x.maks.ptr != 0 or x.maks.ref) return null;
+    const sig = Pool.helpers.signature(s.pool, x);
+    return .{ .params = sig.params, .ret = sig.ret };
+}
+// a type a runtime function can take or give: @comptime(T) is just T there;
+// a type that only exists at compile time can't be one
+fn runtimeType(s: *Sema, at: astpos, t: typeid) Error!typeid {
+    var mask = s.ty(t).maks;
+    mask.@"comptime" = false;
+    const plain = try s.withMask(t, mask);
+    if (s.isComptime(plain)) return s.fail(at, "FNPTR_COMPTIME", "{f} isn't a runtime type", .{s.fmtType(plain)});
+    return plain;
+}
+// the function's runtime instance for exactly to's parameter types, as a
+// pointer: the one a call with arguments of those types would make
+fn fnPointer(s: *Sema, at: astpos, fid: u32, to: typeid) Error!Value {
+    const sig = s.fnptrOf(to).?;
+    const f = s.fns.items[fid];
+    const inst = try s.newScope(f.scope);
+    inst.function = true;
+    const infos = try s.paramInfos(f);
+    if (infos.len != sig.params.len) return s.fail(at, "FNPTR_SIGNATURE", "{d} parameters for {f}", .{ infos.len, s.fmtType(to) });
+    var key: List(u8) = .empty;
+    try key.appendSlice(s.arena, std.mem.asBytes(&fid));
+    const types = try s.newScope(inst);
+    const params = try s.arena.alloc(RtParam, infos.len);
+    for (infos, sig.params, params) |info, want, *p| {
+        const t = try s.lowerType(types, info.type_ast);
+        if (t != want) return s.fail(info.type_ast, "FNPTR_SIGNATURE", "{s} is {f}, not {f}", .{ info.name, s.fmtType(t), s.fmtType(want) });
+        try key.appendSlice(s.arena, std.mem.asBytes(&t));
+        var scratch: Block = .{ .func = try s.scratchFunc(), .typeof_only = true };
+        try s.bind(types, info.name_ast, info.name, .{ .rt = .{ .ref = try s.emit(&scratch, info.name_ast, t, .{ .arg = 0 }), .func = scratch.func.? } });
+        p.* = .{ .name = info.name, .at = info.name_ast, .ref = undefined, .type = t };
+    }
+    const ret = try s.lowerType(types, f.ret);
+    if (ret != s.t.any and ret != sig.ret) return s.fail(f.ret, "FNPTR_SIGNATURE", "returns {f}, not {f}", .{ s.fmtType(ret), s.fmtType(sig.ret) });
+    const fi = s.instances.get(key.items) orelse try s.instantiate(f, inst, ret, params, key.items, fid);
+    const got = s.funcs.items[fi].ret orelse return s.fail(at, "RECURSIVE_ANY_RETURN", "the return type is still being worked out", .{});
+    if (got != sig.ret) return s.fail(f.ret, "FNPTR_SIGNATURE", "returns {f}, not {f}", .{ s.fmtType(got), s.fmtType(sig.ret) });
+    var bits: usize = fi;
+    return .{ .type = to, .bytes = try s.arena.dupe(u8, std.mem.asBytes(&bits)) };
+}
+fn callPointer(s: *Sema, b: *Block, sc: *Scope, a: astpos, head: astpos, callee: Res, params: []const typeid, ret: typeid, args: []const astpos) Error!Res {
+    try s.argCount(a, args, params.len);
+    const vals = try s.arena.alloc(Ref, args.len);
+    for (vals, args, params) |*v, x, t| v.* = try s.coerce(b, x, try s.lower(b, sc, x, t), t);
+    const p = try s.rvalue(b, head, callee);
+    // a known pointer is a known function
+    if (p == .value) {
+        const fi: u32 = @intCast(std.mem.bytesToValue(usize, p.value.bytes[0..@sizeOf(usize)]));
+        return .{ .val = try s.emit(b, a, ret, .{ .call = .{ .func = fi, .args = vals } }) };
+    }
+    return .{ .val = try s.emit(b, a, ret, .{ .call_ptr = .{ .callee = p, .args = vals } }) };
 }
 
 // what @len and @get look into: an AST, an array or a tuple
@@ -1135,7 +1199,7 @@ fn declareStorage(s: *Sema, b: *Block, sc: *Scope, a: astpos, name_ast: astpos, 
         place.where = .{ .global = @intCast(s.globals.items.len) };
         try s.globals.append(s.arena, .{ .name = try s.arena.dupe(u8, name), .type = t });
     } else {
-        const r = try s.emit(b, a, try s.ptrTo(t), .alloc);
+        const r = try s.emit(b, a, try s.ptrTo(t), .{ .alloc = try s.arena.dupe(u8, name) });
         place.where = .{ .local = .{ .func = b.func.?, .inst = r.inst } };
     }
     if (value) |v| _ = try s.emit(b, a, s.t.void, .{ .store = .{ .place = try s.placeAddr(b, a, place), .value = v } });
@@ -1418,6 +1482,15 @@ fn callBuiltin(s: *Sema, b: *Block, sc: *Scope, a: astpos, bi: Builtin, args: []
             const n = try s.toIndex(args[0], try s.comptimeValue(sc, args[0]));
             return known(try s.vType(try Pool.helpers.array(s.pool, n, try s.lowerType(sc, args[1]))));
         },
+        .fnptr => {
+            try s.argCount(a, args, 2);
+            if (!s.headIs(args[0], "[]")) return s.fail(args[0], "FNPTR_PARAMS", "the parameter types are a [...] list", .{});
+            const ps = (try s.children(args[0]))[1..];
+            const params = try s.arena.alloc(typeid, ps.len);
+            for (params, ps) |*t, p| t.* = try s.runtimeType(p, try s.lowerType(sc, p));
+            const ret = try s.runtimeType(args[1], try s.lowerType(sc, args[1]));
+            return known(try s.vType(try Pool.helpers.function(s.pool, .fnptr, params, ret)));
+        },
         .ptr, .refT => {
             try s.argCount(a, args, 1);
             const t = try s.lowerType(sc, args[0]);
@@ -1525,6 +1598,9 @@ fn callBuiltin(s: *Sema, b: *Block, sc: *Scope, a: astpos, bi: Builtin, args: []
         .where => {
             try s.argCount(a, args, 1);
             const p = try s.asPlace(b, args[0], try s.lower(b, sc, args[0], null));
+            // a reference's address is a plain pointer to what it refers to
+            const t = s.typeOf(b.func, p.place);
+            if (s.isRef(t)) return .{ .val = try s.retypeValue(b, args[0], p.place, try s.ptrTo(try s.pointee(t))) };
             return .{ .val = p.place };
         },
         .at => {
@@ -1925,6 +2001,7 @@ pub fn fold(s: *Sema, a: astpos, op: Builtin, t: typeid, l: Value, r: Value) Err
 fn cast(s: *Sema, b: *Block, a: astpos, x: Ref, to: typeid) Error!Ref {
     const from = s.typeOf(b.func, x);
     if (s.isNum(from) and s.isInt(to)) return s.coerce(b, a, .{ .val = x }, to);
+    if (from == s.t.@"fn" and s.fnptrOf(to) != null) return s.coerce(b, a, .{ .val = x }, to);
     if (s.isPtr(from) and s.isPtr(to)) return s.retypeValue(b, a, x, to);
     if ((try s.unconst(from)) == (try s.unconst(to))) return s.retypeValue(b, a, x, to);
     return s.fail(a, "CANNOT_CAST", "{f} as {f}", .{ s.fmtType(from), s.fmtType(to) });
@@ -2218,6 +2295,12 @@ const TypeFmt = struct {
                 try w.writeAll(")");
             },
             .ctag => try w.print("ctype {s}", .{Pool.helpers.ctag_name(s.pool, x)}),
+            .fnptr => {
+                const sig = Pool.helpers.signature(s.pool, x);
+                try w.writeAll("fnptr[[");
+                for (sig.params, 0..) |p, i| try w.print("{s}{f}", .{ if (i == 0) "" else ", ", s.fmtType(p) });
+                try w.print("], {f}]", .{s.fmtType(sig.ret)});
+            },
             else => try w.writeAll(@tagName(x.type)),
         }
     }
@@ -2307,6 +2390,11 @@ fn dumpBody(s: *Sema, w: *std.Io.Writer, fi: u32, body: []const InstIdx, depth: 
             .extract => |x| try w.print(" {f}.{d}", .{ R(s, x.base), x.index }),
             .elem => |x| try w.print(" {f}[{f}]", .{ R(s, x.base), R(s, x.index) }),
             .cexpr => |x| try w.print(" \"{s}\"", .{x}),
+            .call_ptr => |x| {
+                try w.print(" ({f})(", .{R(s, x.callee)});
+                for (x.args, 0..) |arg, n| try w.print("{s}{f}", .{ if (n == 0) "" else ", ", R(s, arg) });
+                try w.writeAll(")");
+            },
             .call => |x| {
                 try w.print(" {s}(", .{s.funcs.items[x.func].name});
                 for (x.args, 0..) |arg, n| try w.print("{s}{f}", .{ if (n == 0) "" else ", ", R(s, arg) });

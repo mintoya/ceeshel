@@ -15,16 +15,21 @@ const Emit = @This();
 
 sema: *Sema,
 w: *W,
+lines: bool, // #line directives back to the source
+last_file: ?u32 = null,
+last_line: usize = 0,
+line_starts: std.AutoHashMapUnmanaged(u32, []const usize) = .empty,
 // aggregate types already defined, by their undecorated type
 defined: std.AutoHashMapUnmanaged(typeid, void) = .empty,
 types: std.Io.Writer.Allocating, // definitions, in dependency order
 
-pub fn emit(sema: *Sema, w: *W) !void {
-    var e: Emit = .{ .sema = sema, .w = w, .types = .init(sema.arena) };
+pub fn emit(sema: *Sema, w: *W, lines: bool) !void {
+    var e: Emit = .{ .sema = sema, .w = w, .lines = lines, .types = .init(sema.arena) };
     try e.program();
 }
 
 const prologue =
+    \\#include <string.h>
     \\typedef unsigned long long cs_u64;
     \\typedef long long cs_i64;
     \\// a negative count shifts the other way; past the width it's all gone
@@ -42,7 +47,7 @@ fn program(e: *Emit) !void {
     var code: std.Io.Writer.Allocating = .init(s.arena);
     const b = &code.writer;
     // globals, then every function's prototype, then their bodies
-    for (s.globals.items, 0..) |g, i| try b.print("static {f} g{d}; // {s}\n", .{ try e.decl(g.type), i, g.name });
+    for (s.globals.items, 0..) |g, i| try b.print("static {f} {s};\n", .{ try e.decl(g.type), try e.globalName(i) });
     for (s.funcs.items, 0..) |f, fi| if (fi != 0 and f.name.len != 0) try e.signature(b, @intCast(fi), true);
     for (s.funcs.items, 0..) |f, fi| if (fi != 0 and f.name.len != 0) try e.function(b, @intCast(fi));
     try e.function(b, 0);
@@ -71,9 +76,10 @@ fn function(e: *Emit, w: *W, fi: u32) !void {
     // every instruction's variable, and every local's storage, up front
     for (f.insts.items, 0..) |inst, i| {
         if (inst.type == s.t.void or inst.data == .brk or inst.data == .cont) continue;
-        if (inst.data == .alloc) try w.print("  {f} l{d};\n", .{ try e.decl(try s.pointee(inst.type)), i });
+        if (inst.data == .alloc) try w.print("  {f} {s};\n", .{ try e.decl(try s.pointee(inst.type)), try e.localName(fi, @intCast(i)) });
         try w.print("  {f} v{d};\n", .{ try e.decl(inst.type), i });
     }
+    e.last_file = null;
     try e.body(w, fi, f.body, 1);
     const result = try e.ref(fi, f.result);
     if (fi == 0) {
@@ -87,18 +93,81 @@ fn function(e: *Emit, w: *W, fi: u32) !void {
 // isn't a C name
 fn paramName(e: *Emit, fi: u32, n: usize) ![]const u8 {
     const name = e.sema.funcs.items[fi].param_names.items[n];
+    return if (cName(name)) name else std.fmt.allocPrint(e.sema.arena, "a{d}", .{n});
+}
+// a local or global keeps its source name, made unique, for a debugger
+fn localName(e: *Emit, fi: u32, i: InstIdx) ![]const u8 {
+    const name = e.sema.funcs.items[fi].insts.items[i].data.alloc;
+    if (cName(name)) return std.fmt.allocPrint(e.sema.arena, "{s}_{d}", .{ name, i });
+    return std.fmt.allocPrint(e.sema.arena, "l{d}", .{i});
+}
+fn globalName(e: *Emit, n: usize) ![]const u8 {
+    const name = e.sema.globals.items[n].name;
+    if (cName(name)) return std.fmt.allocPrint(e.sema.arena, "{s}_g{d}", .{ name, n });
+    return std.fmt.allocPrint(e.sema.arena, "g{d}", .{n});
+}
+// a source name usable as is in C: not a keyword, and not shaped like a name
+// made up here (v1, l1, g1, a1, x_1, x_g1, cs_...)
+fn cName(name: []const u8) bool {
     const c_keywords = [_][]const u8{ "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "main" };
     var ok = name.len > 0 and !std.ascii.isDigit(name[0]);
     for (name) |c| ok = ok and (std.ascii.isAlphanumeric(c) or c == '_');
     for (c_keywords) |k| ok = ok and !std.mem.eql(u8, k, name);
+    if (!ok or std.mem.startsWith(u8, name, "cs_")) return false;
     // v, l, g and a followed by digits are taken
-    if (ok and name.len > 1 and std.mem.indexOfScalar(u8, "vlga", name[0]) != null) {
-        var digits = true;
-        for (name[1..]) |c| digits = digits and std.ascii.isDigit(c);
-        ok = !digits;
+    if (name.len > 1 and std.mem.indexOfScalar(u8, "vlga", name[0]) != null and allDigits(name[1..])) return false;
+    // so is anything ending in _N or _gN
+    if (std.mem.lastIndexOfScalar(u8, name, '_')) |u| {
+        const tail = name[u + 1 ..];
+        if (allDigits(tail) or (tail.len > 1 and tail[0] == 'g' and allDigits(tail[1..]))) return false;
     }
-    if (ok and std.mem.startsWith(u8, name, "cs_")) ok = false;
-    return if (ok) name else std.fmt.allocPrint(e.sema.arena, "a{d}", .{n});
+    return true;
+}
+fn allDigits(x: []const u8) bool {
+    if (x.len == 0) return false;
+    for (x) |c| if (!std.ascii.isDigit(c)) return false;
+    return true;
+}
+
+// #line for where an instruction came from, when that changed; the file is
+// named again when it isn't the last one named
+fn line(e: *Emit, w: *W, at: u32) !void {
+    if (!e.lines) return;
+    const src = e.sema.srcOf(at) orelse return;
+    if (src.fileref == 0) return; // made-up names are nowhere
+    const file = e.sema.ast.files.items[src.fileref];
+    const starts = e.line_starts.get(src.fileref) orelse s: {
+        const content = switch (file.content) {
+            .file => |c| c,
+            .buffer => |b| b.items,
+        };
+        var list: std.ArrayList(usize) = .empty;
+        try list.append(e.sema.arena, 0);
+        for (content, 0..) |c, n| if (c == '\n') try list.append(e.sema.arena, n + 1);
+        try e.line_starts.put(e.sema.arena, src.fileref, list.items);
+        break :s list.items;
+    };
+    // the last line starting at or before the offset
+    var lo: usize = 0;
+    var hi: usize = starts.len;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) / 2;
+        if (starts[mid] <= src.offset) lo = mid else hi = mid;
+    }
+    const n = lo + 1;
+    if (e.last_file == src.fileref and e.last_line == n) return;
+    if (e.last_file == src.fileref) {
+        try w.print("#line {d}\n", .{n});
+    } else {
+        try w.print("#line {d} \"", .{n});
+        for (file.name) |c| {
+            if (c == '"' or c == '\\') try w.writeByte('\\');
+            try w.writeByte(c);
+        }
+        try w.writeAll("\"\n");
+    }
+    e.last_file = src.fileref;
+    e.last_line = n;
 }
 
 fn indent(w: *W, depth: usize) !void {
@@ -109,14 +178,19 @@ fn body(e: *Emit, w: *W, fi: u32, insts: []const InstIdx, depth: usize) anyerror
     const s = e.sema;
     for (insts) |i| {
         const inst = s.funcs.items[fi].insts.items[i];
+        try e.line(w, inst.at);
         try indent(w, depth);
         const t = inst.type;
         switch (inst.data) {
             .arg => |n| try w.print("v{d} = {s};\n", .{ i, try e.paramName(fi, n) }),
-            .global => |n| try w.print("v{d} = &g{d};\n", .{ i, n }),
-            .alloc => try w.print("v{d} = &l{d};\n", .{ i, i }),
-            .load => |p| try w.print("v{d} = *{s};\n", .{ i, try e.ref(fi, p) }),
-            .store => |x| try w.print("*{s} = {s};\n", .{ try e.ref(fi, x.place), try e.ref(fi, x.value) }),
+            .global => |n| try w.print("v{d} = &{s};\n", .{ i, try e.globalName(n) }),
+            .alloc => try w.print("v{d} = &{s};\n", .{ i, try e.localName(fi, i) }),
+            // memory is bytes: copied, so any type may read what another wrote
+            .load => |p| try w.print("memcpy(&v{d}, {s}, sizeof v{d});\n", .{ i, try e.ref(fi, p), i }),
+            .store => |x| switch (x.value) {
+                .inst => |v| try w.print("memcpy({s}, &v{d}, sizeof v{d});\n", .{ try e.ref(fi, x.place), v, v }),
+                .value => |v| try w.print("{{ {f} t = {s}; memcpy({s}, &t, sizeof t); }}\n", .{ try e.decl(v.type), try e.literal(v), try e.ref(fi, x.place) }),
+            },
             .cast => |x| try w.print("v{d} = ({f}){s};\n", .{ i, try e.decl(t), try e.ref(fi, x) }),
             // the same bytes: a cast between pointers, else a copy
             .retype => |x| if ((try e.decl(t)).stars > 0)
@@ -133,6 +207,12 @@ fn body(e: *Emit, w: *W, fi: u32, insts: []const InstIdx, depth: usize) anyerror
                 try w.print("v{d} = {s};\n", .{ i, try e.ref(fi, x.rhs) });
                 try indent(w, depth);
                 try w.writeAll("}\n");
+            },
+            .call_ptr => |x| {
+                if (t != s.t.void) try w.print("v{d} = ", .{i});
+                try w.print("({s})(", .{try e.ref(fi, x.callee)});
+                for (x.args, 0..) |a, n| try w.print("{s}{s}", .{ if (n == 0) "" else ", ", try e.ref(fi, a) });
+                try w.writeAll(");\n");
             },
             .call => |x| {
                 if (t != s.t.void) try w.print("v{d} = ", .{i});
@@ -246,6 +326,8 @@ fn literal(e: *Emit, v: Value) anyerror![]const u8 {
     }
     switch (x.type) {
         .void => return "0",
+        // a function pointer's bytes are its instance's number
+        .fnptr => return s.funcs.items[@intCast(std.mem.bytesToValue(usize, v.bytes[0..@sizeOf(usize)]))].name,
         .bool => return if (v.bytes[0] != 0) "1" else "0",
         .array, .@"struct" => {
             var out: std.Io.Writer.Allocating = .init(a);
@@ -313,7 +395,7 @@ fn baseName(e: *Emit, t: typeid) ![]const u8 {
         .culong => "unsigned long",
         .culonglong => "unsigned long long",
         .ctag => Pool.helpers.ctag_name(s.pool, x),
-        .array, .@"struct" => {
+        .array, .@"struct", .fnptr => {
             const name = try std.fmt.allocPrint(s.arena, "t{d}", .{t});
             try e.define(t, name);
             return name;
@@ -331,8 +413,14 @@ fn define(e: *Emit, t: typeid, name: []const u8) !void {
     var def: std.Io.Writer.Allocating = .init(s.arena);
     // a struct is named first, so its fields can point to it
     if (x.type == .@"struct") try e.types.writer.print("typedef struct {s} {s};\n", .{ name, name });
-    // arrays are wrapped, so they copy as values
-    if (x.type == .array) {
+    if (x.type == .fnptr) {
+        const sig = Pool.helpers.signature(s.pool, x);
+        try def.writer.print("typedef {f} (*{s})(", .{ try e.decl(sig.ret), name });
+        for (sig.params, 0..) |p, i| try def.writer.print("{s}{f}", .{ if (i == 0) "" else ", ", try e.decl(p) });
+        if (sig.params.len == 0) try def.writer.writeAll("void");
+        try def.writer.writeAll(");\n");
+    } else if (x.type == .array) {
+        // arrays are wrapped, so they copy as values
         const arr = Pool.helpers.array_of(s.pool, x);
         try def.writer.print("typedef struct {{ {f} e[{d}]; }} {s};\n", .{ try e.decl(arr.elem), arr.len, name });
     } else {

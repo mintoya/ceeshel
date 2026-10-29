@@ -87,6 +87,13 @@ fn exec(it: *Interp, fi: u32, frame: []Value, args: []const Value, body: []const
                 for (vals, x.args) |*v, a| v.* = get(frame, a);
                 break :c try it.run(x.func, vals);
             },
+            // a function pointer's bytes are its instance's number
+            .call_ptr => |x| c: {
+                const vals = try it.arena.alloc(Value, x.args.len);
+                for (vals, x.args) |*v, a| v.* = get(frame, a);
+                const callee = get(frame, x.callee);
+                break :c try it.run(@intCast(std.mem.bytesToValue(usize, callee.bytes[0..@sizeOf(usize)])), vals);
+            },
             .cond => |x| c: {
                 const flow = try it.exec(fi, frame, args, if (get(frame, x.cond).bytes[0] != 0) x.then else x.@"else");
                 if (flow != .next) return flow;

@@ -1,0 +1,15 @@
+// a reference refers to one place for its life: = writes through it. Which
+// place can be chosen at runtime, through a pointer; @where of a reference
+// is a pointer to what it refers to
+i32 ~~ @sint(); bool ~~ @bool();
+x ~i32 = 1; y ~i32 = 2;
+r ~@refT(i32) = x;
+r = y;
+either ~~ @fn[[c ~bool, a ~@refT(i32), b ~@refT(i32)], @refT(i32), {
+  p ~@ptr(i32) = @where a;
+  @if[c, p = @where b];
+  @at p
+}];
+flag ~bool = 1 == 1;
+either(flag, x, y) = 9;
+(x == 2) and (y == 9)
