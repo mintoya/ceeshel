@@ -1,0 +1,12 @@
+// a slice of an array writes through to it; sub and iter
+@using @import @path "lib/slice.cshl";
+@using @import @path "lib/iterator.cshl";
+@using @import @path "lib/types.cshl";
+a ~@arr[5, i32] = [1, 2, 3, 4, 5];
+s ~= slice_of(a);
+s:get(0) = 10;
+t ~= s:sub(1, 4);
+t:get(2) = 40;
+sum ~i32 = 0;
+t:iter() |> each(sum = sum + _);
+(@get[a, 0] == 10) and (@get[a, 3] == 40) and (t.len == 3) and (sum == 45)

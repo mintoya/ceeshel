@@ -1,0 +1,106 @@
+// cshl's iterator.cshl. An iterator is a value with next(), giving a ?(T):
+// present until it runs out. The adapters are written after |>, where _ is
+// the iterator before them: range(0, 5) |> map(_ * 2) |> each(sum = sum + _)
+@using @import @path "types.cshl";
+@using @import @path "fn.cshl";
+@using @import @path "optional.cshl";
+
+// start, start + 1, ... up to end, not including it
+range ~~ [start ~any, end ~@typeof(start)] <<fn>> any {
+  R ~~ @struct{
+    Self ~~ @this();
+    at ~@typeof(start);
+    end ~@typeof(start);
+    next ~~ [self ~@refT(Self)] <<fn>> ?(@typeof(start)) {
+      r ~?(@typeof(start)) = null;
+      @if[self.at < self.end, {
+        r = self.at;
+        self.at = self.at + 1;
+      }];
+      r
+    };
+  };
+  r ~R = [start, end];
+  r
+};
+
+// An adapter expands to a call of its _on function with the body made a
+// function of _, where the adapter is written: the body sees the caller's
+// compile-time names, and the iterator is built here, with this file's names.
+
+// each value as f gives it
+map_on ~~ [inner ~any, f ~any] <<fn>> any {
+  M ~~ @struct{
+    Self ~~ @this();
+    inner ~@typeof(inner);
+    next ~~ [self ~@refT(Self)] <<fn>> any {
+      x ~= self.inner:next();
+      r ~?(@typeof(f(x.value))) = null;
+      @if[x.present, r = f(x.value)];
+      r
+    };
+  };
+  r ~M = [inner];
+  r
+};
+map ~~ [body ~ast] <<fn>> inline '(map_on(_, @fn[[_ ~@any()], @any(), `body]));
+
+// the values f holds for
+filter_on ~~ [inner ~any, f ~any] <<fn>> any {
+  M ~~ @struct{
+    Self ~~ @this();
+    inner ~@typeof(inner);
+    next ~~ [self ~@refT(Self)] <<fn>> any {
+      x ~= self.inner:next();
+      @loop{
+        @if[x.present, @if[f(x.value), @break()], @break()];
+        x = self.inner:next();
+      };
+      x
+    };
+  };
+  r ~M = [inner];
+  r
+};
+filter ~~ [body ~ast] <<fn>> inline '(filter_on(_, @fn[[_ ~@any()], @any(), `body]));
+
+// the values before the first f holds for
+until_on ~~ [inner ~any, f ~any] <<fn>> any {
+  M ~~ @struct{
+    Self ~~ @this();
+    inner ~@typeof(inner);
+    next ~~ [self ~@refT(Self)] <<fn>> any {
+      x ~= self.inner:next();
+      @if[x.present, @if[f(x.value), x = null]];
+      x
+    };
+  };
+  r ~M = [inner];
+  r
+};
+until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @any(), `body]));
+
+// body for each value, as _, where each is written, so it can change the
+// caller's variables
+each ~~ [body ~ast] <<fn>> inline {
+  it ~~ @gensym(it);
+  x ~~ @gensym(x);
+  '{
+    `it ~= _;
+    @loop{
+      `x ~= (`it):next();
+      @if[(`x).present, (`x).value |> `body, @break()];
+    };
+  }
+};
+
+@struct{
+  range ~~ range;
+  map ~~ map;
+  map_on ~~ map_on;
+  filter ~~ filter;
+  filter_on ~~ filter_on;
+  until ~~ until;
+  until_on ~~ until_on;
+  each ~~ each;
+}

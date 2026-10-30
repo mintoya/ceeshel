@@ -1,11 +1,10 @@
 // a block's value meets the destination: {...; [..]} builds the type
-ast ~~ @ast(); any ~~ @any(); inline ~~ @inlineast(); i32 ~~ @sint();
-fn ~~ @fn[[params ~ast, ret ~ast], inline,
-  '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
+@using @import @path "lib/fn.cshl";
+@using @import @path "lib/types.cshl";
 somevalue ~ @struct {
   value ~ i32;
   __add ~~ [a~@this(),b~@this()] <<fn>> @this()
-    {[value ~~ (a.value + b.value)]};
+    [value ~~ (a.value + b.value)];
 };
 somevalue = [value ~~ 1];
 somevalue = somevalue :__add somevalue;

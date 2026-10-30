@@ -1,0 +1,99 @@
+// cshl's print.cshl. print[["% is %/%", x, y]] writes the format with each %
+// replaced by the next argument, through a fmt_ctx: a context pointer and a
+// function given what to write. / writes the character after it as it is.
+// The format is passed on as an AST, so each one has its own fmt_r, which
+// walks it at compile time and leaves only the writes.
+@using @import @path "types.cshl";
+@using @import @path "fn.cshl";
+@using @import @path "slice.cshl";
+@using @import @path "iterator.cshl";
+@cinclude("<stdio.h>");
+
+fmt_ctx ~~ @struct{
+  Self ~~ @this();
+  ctx ~@ptr(@void());
+  out ~@fnptr[[@ptr(@void()), slice(i8)], @void()];
+  put ~~ [self ~Self, msg ~slice(i8)] <<fn>> @void() self.out(self.ctx, msg);
+};
+
+// v in decimal
+fmt_int ~~ [ctx ~fmt_ctx, v ~i64] <<fn>> @void() {
+  buf ~@arr[20, i8];
+  // the magnitude as a u64, which holds the smallest i64's too
+  m ~u64;
+  @if[v < 0, m = ((0 - (v + 1)) as u64) + 1, m = v as u64];
+  j ~u64 = 20;
+  @loop{
+    j = j - 1;
+    @get[buf, j] = @get["0", 0] + ((m % 10) as i8);
+    m = m / 10;
+    @if[m == 0, @break()];
+  };
+  @if[v < 0, {
+    j = j - 1;
+    @get[buf, j] = @get["-", 0];
+  }];
+  ctx:put(slice_of(buf):sub(j, 20));
+};
+
+// one argument: an integer, a string, a slice, or a value with _fmt(ctx)
+fmt_one ~~ [ctx ~fmt_ctx, v ~any] <<fn>> @void() {
+  @if[@compiles(fmt_int(ctx, v)), fmt_int(ctx, v),
+    @if[@compiles(ctx:put(v)), ctx:put(v), {
+      t ~= v;
+      @if[@compiles(slice_of(t)), ctx:put(slice_of(t)), v:_fmt(ctx)];
+    }]];
+};
+
+fmt_r ~~ [ctx ~fmt_ctx, format ~ast, args ~any] <<fn>> @void() {
+  f ~~ `format;
+  text ~= f;
+  s ~= slice_of(text);
+  n ~~ @countof(@typeof(f));
+  i ~int = 0;
+  start ~int = 0;
+  k ~int = 0;
+  @cwhile[i < n, {
+    c ~~ @get[f, i];
+    @if[c == @get["%", 0], {
+      ctx:put(s:sub(start, i));
+      fmt_one(ctx, @get[args, k]);
+      k = k + 1;
+      start = i + 1;
+    }];
+    @if[c == @get["/", 0], {
+      ctx:put(s:sub(start, i));
+      i = i + 1;
+      start = i;
+    }];
+    i = i + 1;
+  }];
+  @if[k != @len[args], @compileError("more arguments than %")];
+  ctx:put(s:sub(start, n));
+};
+
+// fmt(ctx, ["format", args...])
+fmt ~~ [ctx ~ast, a ~ast] <<fn>> inline
+  '(fmt_r(`ctx, `(@get[a, 1]), [..`(@get[a, 2, @len[a]])]));
+
+putc ~~ [c ~i8] <<fn>> @void() @cexpr[@void(), "putchar(c)"];
+stdout ~~ [ctx ~@ptr(@void()), msg ~slice(i8)] <<fn>> @void() (msg:iter() |> each(putc(_)));
+cfmt ~~ [] <<fn>> fmt_ctx {
+  r ~fmt_ctx;
+  r.out = stdout;
+  r
+};
+
+// print[["format", args...]]: fmt to stdout
+print ~~ [a ~ast] <<fn>> inline
+  '(fmt_r(cfmt(), `(@get[a, 1]), [..`(@get[a, 2, @len[a]])]));
+
+@struct{
+  fmt_ctx ~~ fmt_ctx;
+  fmt_int ~~ fmt_int;
+  fmt_one ~~ fmt_one;
+  fmt_r ~~ fmt_r;
+  fmt ~~ fmt;
+  cfmt ~~ cfmt;
+  print ~~ print;
+}

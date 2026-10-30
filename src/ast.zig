@@ -49,13 +49,26 @@ pub const Ast = union(enum(u8)) {
         const tree = parser.parseString(text, null) orelse return error.ParseFailed;
         defer tree.destroy();
         const root = tree.rootNode();
-        if (root.hasError()) return error.SyntaxError;
+        if (root.hasError()) {
+            ctx.syntax_error = ref(fileref, firstError(root));
+            return error.SyntaxError;
+        }
 
         const pos: astpos = @intCast(ctx.asts.items.len);
         try ctx.asts.append(ctx.alloc, .null);
         const top = try convert(ctx, fileref, root); // may move asts: store after
         ctx.asts.items[pos] = top;
         return pos;
+    }
+
+    // the first node the parser couldn't place, or had to make up
+    fn firstError(node: ts.Node) ts.Node {
+        for (0..node.childCount()) |i| {
+            const c = node.child(@intCast(i)).?;
+            if (c.isError() or c.isMissing()) return c;
+            if (c.hasError()) return firstError(c);
+        }
+        return node;
     }
 
     fn ref(fileref: filepos, node: ts.Node) SrcRef {
@@ -210,10 +223,28 @@ pub const SrcRef = struct {
         }[self.offset .. self.len + self.offset];
     }
 };
+// "file:line:col"
+pub const SrcFmt = struct {
+    state: *const AstState,
+    src: SrcRef,
+    pub fn format(self: SrcFmt, w: *std.Io.Writer) std.Io.Writer.Error!void {
+        const file = self.state.files.items[self.src.fileref];
+        const content = switch (file.content) {
+            .file => |c| c,
+            .buffer => |b| b.items,
+        };
+        const before = content[0..self.src.offset];
+        const line = std.mem.count(u8, before, "\n") + 1;
+        const col = self.src.offset - (if (std.mem.lastIndexOfScalar(u8, before, '\n')) |n| n + 1 else 0) + 1;
+        try w.print("{s}:{d}:{d}", .{ file.name, line, col });
+    }
+};
 pub const AstState = struct {
     alloc: Allocator,
     files: List(FileItem),
     asts: List(Ast),
+    // where the last error.SyntaxError is
+    syntax_error: ?SrcRef = null,
     pub fn init(allocator: anytype) !@This() {
         var result = @This(){ .alloc = allocator, .files = .empty, .asts = .empty };
         try result.files.append(allocator, .{ .name = "<generic>", .content = .{ .buffer = .empty } });

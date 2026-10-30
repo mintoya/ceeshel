@@ -5,3 +5,4 @@ zig-pkg/
 /nvim.log
 /tree-sitter
 /a.out
+vgcore.*
