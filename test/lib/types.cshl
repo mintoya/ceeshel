@@ -1,0 +1,19 @@
+@struct {
+  type   ~~ @type();
+  int    ~~ @int();
+  ast    ~~ @ast();
+  inline ~~ @inlineast();
+  any    ~~ @any();
+  anyref ~~ @refT(@any());
+
+  void   ~~ @void();
+  bool   ~~ @bool();
+  i8     ~~ @schar();
+  i16    ~~ @sshort();
+  i32    ~~ @sint();
+  i64    ~~ @slong();
+  u8     ~~ @uchar();
+  u16    ~~ @ushort();
+  u32    ~~ @uint();
+  u64    ~~ @ulong();
+}

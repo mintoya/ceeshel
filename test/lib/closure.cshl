@@ -1,0 +1,41 @@
+@using @import @path "ify.cshl";
+Ast ~~ @import @path "ast.cshl";
+closure_name_of ~~ @fn[[x ~@ast()],@ast(),
+  ify[Ast.is_decl(`x), Ast.decl_name(`x), x]];
+closure_value_of ~~ @fn[[x ~@ast()],@ast(),
+  ify[Ast.is_decl(`x),Ast.decl_value(`x),x]];
+closure_type_of ~~ @fn[[x ~@ast()],@ast(),
+  ify[Ast.is_decl(`x),
+    ify[Ast.decl_type(`x),
+      Ast.decl_type(`x),
+      '@typeof(`(Ast.decl_value(`x)))],
+    '@refT(@typeof(`x))]];
+
+closure_field ~~ @fn[[x ~@ast()],@ast(),'(`(closure_name_of `x) ~ `(closure_type_of `x))];
+closure_bind ~~ @fn[[x ~@ast()],@ast(),'(`(closure_name_of `x) ~= self.`(closure_name_of `x))];
+
+_closure ~~ @fn[[caps ~@ast(), params ~@ast(), ret ~@ast()],@inlineast(),{
+  C ~~ @gensym(C);
+  Self ~~ @gensym(Self);
+  '@fn[[body ~@ast()],@any(),{
+    `C ~~ @struct{
+      `Self ~~ @this();
+      ..`(@apply[closure_field, Ast.items(`caps)]);
+      @id("()") ~~ @fn[[self ~@refT(`Self), ..`(Ast.items(`params))], `ret, {
+        ..`(@apply[closure_bind, Ast.items(`caps)]);
+        \`body
+      }];
+    };
+    result ~`C = [..`(@apply[closure_value_of, Ast.items(`caps)])];
+    result
+  }]
+}];
+
+closure ~~ @fn[[caps ~@ast()],@inlineast(),
+  '(@fn[[params ~@ast(), ret ~@ast()], @inlineast(),
+    '(_closure[`caps, \`params, \`ret])])];
+
+@struct {
+  closure ~~ closure;
+  _closure ~~ _closure;
+}

@@ -1,0 +1,25 @@
+@using @import @path "lib/match.cshl";
+@using @import @path "lib/meta.cshl";
+
+unfolded ~ast~
+  match_ast 6 [
+    else 
+      |> true,
+    1 |> true,
+    6 |> false,
+  ]
+;
+
+(not match 6 [
+  else  |> true,
+  6     |> false,
+]) and (match 1 [
+  else 
+    |> false,
+  1 |> true,
+]) and (match 2 [
+  else 
+    |> true,
+  1 |> false,
+  6 |> false,
+])

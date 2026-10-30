@@ -1,0 +1,5 @@
+// error: FNPTR_SIGNATURE
+i32 ~~ @sint(); u8 ~~ @uchar();
+f ~~ @fn[[a ~u8], i32, 1];
+p ~@fnptr[[i32], i32] = f;
+p(1) == 1

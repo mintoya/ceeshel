@@ -5,7 +5,10 @@ a ~~ @struct {
 b ~~ @struct {
   two ~~ 2;
 };
-c ~~ combine[a,b];
-(@countof(c) == 2)
+c ~~ combine[combine[a,b],@struct{
+  three ~~ @fn[[],@int(),3];
+}];
+(@countof(c) == 3)
   and ( c.one == 1 )
-  and ( c.two == 2 );
+  and ( c.two == 2 )
+  and ( c.three() == 3 );

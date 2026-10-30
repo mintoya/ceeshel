@@ -1,0 +1,4 @@
+// error: UNBOUND_ID
+x ~~ 1;
+{ @unbind(x); };
+x

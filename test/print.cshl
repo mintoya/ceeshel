@@ -1,0 +1,6 @@
+// compiled only
+@using @import @path "lib/print.cshl";
+@using @import @path "lib/types.cshl";
+x ~i32 = -42;
+print[["% != %%/%\n", 1, x, 23]];
+1 == 1

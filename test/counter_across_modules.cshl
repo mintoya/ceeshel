@@ -1,0 +1,7 @@
+// an ever increasing compile-time integer, shared by every module
+C ~~ @import @path "lib/counter.cshl";
+a ~~ C.bump(C.count);
+other ~~ @import @path "lib/counter_user.cshl";
+D ~~ @import @path "lib/counter.cshl";
+c ~~ D.bump(D.count);
+(a == 1) and (other == 2) and (c == 3)
