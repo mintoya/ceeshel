@@ -1,0 +1,51 @@
+// cshl's slice.cshl: a pointer to a zero-length array and a length.
+// s:get(i) is element i, a place. A slice of an array is made from the array itself,
+// slice_of(a): an argument taken by value is a copy, and would be gone.
+@using @import @path "types.cshl";
+@using @import @path "fn.cshl";
+@using @import @path "optional.cshl";
+
+slice ~~ [T ~type] <<fn>> type @struct{
+  Self ~~ @this();
+  ptr ~@ptr(@arr[0, T]);
+  len ~u64;
+  get ~~ [self ~Self, i ~u64] <<fn>> @refT(T) @get[@at(self.ptr), i];
+  // elements start to end, not including end
+  sub ~~ [self ~Self, start ~u64, end ~u64] <<fn>> Self {
+    r ~Self;
+    r.ptr = (@where self:get(start)) as @ptr(@arr[0, T]);
+    r.len = end - start;
+    r
+  };
+  // the elements in order, as values
+  iter ~~ [self ~Self] <<fn>> any {
+    I ~~ @struct{
+      Self ~~ @this();
+      of ~@typeof(self);
+      at ~u64;
+      next ~~ [it ~@refT(Self)] <<fn>> ?(T) {
+        r ~?(T) = null;
+        @if[it.at < it.of.len, {
+          r = it.of:get(it.at);
+          it.at = it.at + 1;
+        }];
+        r
+      };
+    };
+    r ~I = [self, 0];
+    r
+  };
+};
+
+// the whole of the array a
+slice_of ~~ [a ~@refT(@any())] <<fn>> any {
+  r ~slice(@membertype(@typeof(a)));
+  r.ptr = (@where a) as @typeof(r.ptr);
+  r.len = @countof(@typeof(a));
+  r
+};
+
+@struct{
+  slice ~~ slice;
+  slice_of ~~ slice_of;
+}

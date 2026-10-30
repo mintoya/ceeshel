@@ -1,0 +1,40 @@
+@using @import @path "fn.cshl";
+@using @import @path "ify.cshl";
+@using @import @path "types.cshl";
+Ast ~~ @import @path "ast.cshl";
+match_r ~~ [src ~ast,a ~ast] <<fn>> ast { 
+  curr ~~ @get[a,0];
+  rest ~~ @get[a,1,@len(a)];
+  @if[@ast_stringeq[(@get[curr,0]),"|>"] == (0==1) ,
+    @compileError("expexted |> in match arm")];
+  iselse ~~ @ast_stringeq[(@get[curr,1]) , "else"];
+
+  pick ~~ [c ~@comptime(bool), yes ~ast, no ~ast] <<fn>> ast 
+    ify[c,yes,no];
+  `(pick[
+    (@len(a) != 1) and (iselse),
+    match_r[`src , `(Ast.append[`curr,`rest])],
+    `(pick[(@len(a) == 1) and (iselse), '(`(@get[curr,2])),
+    `(pick[@len(a) != 0, '{
+          ify[`src == `(@get[curr,1]),
+            `(@get[curr,2]),
+            `(match_r[`src , `rest])
+          ]
+    },'{}])])
+  ]);
+};
+match_ast ~~ [a~ast] <<fn>> ast {
+  src ~~ @gensym(src);
+  @if[@len(a) != 2 ,
+    @compileError("expected match(item,[arm,...])")];
+  @if[@ast_stringeq(@get[@get[a,1],0],"[]") == (0 == 1),
+    @compileError("expected [] block")];
+  '{
+    `src ~~ `@get[a, 0];
+    `(match_r[`src , `(Ast.items[`(@get[a,1])])])
+  }
+};
+@struct{
+  match_ast ~~ match_ast;
+  match ~~ [a~ast] <<fn>> inline match_ast[`a];
+}

@@ -1,0 +1,7 @@
+// a list given a type with as builds that type
+@using @import @path "lib/types.cshl";
+P ~~ @struct{ x ~i32; y ~i32; };
+p ~= [1, 2] as P;
+a ~= [3, 4, 5] as @arr[3, i32];
+t ~= { [6, 7] } as P;
+(p.y == 2) and (@get[a, 2] == 5) and (t.x == 6)

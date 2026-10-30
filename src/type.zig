@@ -60,6 +60,7 @@ pub const builtins = enum(u8) {
     id, //        @id("s") the id spelled s, any text
     compileError, // @compileError("msg") fails compilation with msg
     compiles, //  @compiles(x) whether x lowers without an error; its code is discarded
+    log, //       @log(x) prints what x expands to if an inline call, its value if known, and its type; yields x
     raw, // @raw(x): x with every operator name the builtin
     // reflection and layout
     typeof, //    @typeof(x) the type of x, lowered but never run; a reference gives its target, const is dropped
@@ -78,6 +79,7 @@ pub const builtins = enum(u8) {
     // modules
     import, //    @import "file" the file's last expression, the file lowered once
     using, //     @using S binds S's namespace members here
+    unbind, //    @unbind(name) removes name from this scope, not an enclosing one, so it can be declared again
     path, //      @path "p" p relative to this source file; @path() this file
     //c
     cinclude, //  @cinclude("h") #include in the C output, top level only
@@ -190,6 +192,10 @@ maks: packed struct {
     @"const": bool = false,
     ref: bool = false,
     @"comptime": bool = false,
-    ptr: @Int(.unsigned, @bitSizeOf(u32) - 4) = 0,
+    // a reference is outside the pointers (a reference to a pointer); there
+    // are no pointers to references, except the address of a place holding
+    // one, which is this
+    refaddr: bool = false,
+    ptr: @Int(.unsigned, @bitSizeOf(u32) - 5) = 0,
 },
 data: u32,

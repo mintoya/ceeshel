@@ -65,17 +65,7 @@ const Unit = struct {
     // the error the last stage failed with, as file:line:col: CODE: detail
     fn describe(unit: *Unit, w: *std.Io.Writer) !void {
         const err = unit.sema.err.?;
-        if (unit.sema.srcOf(err.at)) |src| {
-            const file = unit.state.files.items[src.fileref];
-            const content = switch (file.content) {
-                .file => |c| c,
-                .buffer => |b| b.items,
-            };
-            const before = content[0..src.offset];
-            const line = std.mem.count(u8, before, "\n") + 1;
-            const col = src.offset - (if (std.mem.lastIndexOfScalar(u8, before, '\n')) |n| n + 1 else 0) + 1;
-            try w.print("{s}:{d}:{d}: ", .{ file.name, line, col });
-        }
+        try w.print("{f}", .{unit.sema.fmtAt(err.at)});
         try w.print("{s}: {s}", .{ err.code, err.detail });
     }
 };
@@ -101,7 +91,11 @@ pub fn main(init: std.process.Init) !u8 {
     var unit: Unit = undefined;
     try unit.init(init.gpa, init.io);
     defer unit.deinit();
-    try unit.parse(init.io, parsed.positionals[0]);
+    unit.parse(init.io, parsed.positionals[0]) catch |e| {
+        if (e != error.SyntaxError) return e;
+        println("PARSE: syntax error at {f}", .{Ast.SrcFmt{ .state = &unit.state, .src = unit.state.syntax_error.? }});
+        return 1;
+    };
     if (parsed.options.ast) {
         println("{f}", .{Ast.AstCtx{ .state = &unit.state, .ast = unit.state.asts.items[unit.entry] }});
         return 0;
@@ -196,8 +190,9 @@ fn runTest(unit: *Unit, io: std.Io, path: [:0]const u8, name: []const u8, compil
     const prefix = "// error: ";
     const expected: ?[]const u8 = if (std.mem.startsWith(u8, first, prefix)) std.mem.trim(u8, first[prefix.len..], " \r") else null;
     parsed catch |e| {
-        if (e == error.SyntaxError) if (expected) |code| if (std.mem.eql(u8, code, "PARSE")) return .pass;
-        return .{ .fail = try std.fmt.allocPrint(a, "{t}", .{e}) };
+        if (e != error.SyntaxError) return .{ .fail = try std.fmt.allocPrint(a, "{t}", .{e}) };
+        if (expected) |code| if (std.mem.eql(u8, code, "PARSE")) return .pass;
+        return .{ .fail = try std.fmt.allocPrint(a, "PARSE: syntax error at {f}", .{Ast.SrcFmt{ .state = &unit.state, .src = unit.state.syntax_error.? }}) };
     };
     const compiled_only = std.mem.startsWith(u8, first, "// compiled only");
     if (compiled_only and !compile) return .skip;

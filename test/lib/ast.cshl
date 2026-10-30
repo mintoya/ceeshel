@@ -26,7 +26,17 @@ decl_value ~~ @fn[[x ~ast], ast, {
   r
 }];
 
+prepend ~~ @fn[[a ~ast,x ~ast],ast,{
+  items[`('[`a,..`x])]
+}];
+append ~~ @fn[[a ~ast,x ~ast],ast,{
+  items[`('[..`x,`a])]
+}];
+
 @struct{
+  is ~~ is;
+  prepend ~~ prepend;
+  append ~~ append;
   items ~~ items;
   is_list ~~ is_list;
   is_block ~~ is_block;

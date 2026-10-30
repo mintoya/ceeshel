@@ -1,0 +1,11 @@
+// @unbind takes a name out of this scope, so it can be declared again,
+// including one brought in by @using
+i32 ~~ @sint();
+x ~i32 = 1;
+@unbind(x);
+x ~i32 = 2;
+@using @struct{ y ~~ 2; };
+@unbind("y");
+y ~~ 3;
+S ~~ @struct{ a ~~ 1; b ~~ 2; @unbind(a); a ~~ 4; };
+(x == 2) and (y == 3) and (S.a == 4) and (@countof(S) == 2)

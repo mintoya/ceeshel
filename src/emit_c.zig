@@ -373,7 +373,7 @@ const Decl = struct {
 fn decl(e: *Emit, t: typeid) anyerror!Decl {
     const s = e.sema;
     const x = s.ty(t);
-    const stars = @as(usize, x.maks.ptr) + @intFromBool(x.maks.ref);
+    const stars = @as(usize, x.maks.ptr) + @intFromBool(x.maks.ref) + @intFromBool(x.maks.refaddr);
     const plain = try Pool.helpers.decorate(s.pool, t, .{});
     return .{ .base = try e.baseName(plain), .stars = stars };
 }

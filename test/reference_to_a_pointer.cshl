@@ -1,0 +1,8 @@
+// a reference is outside the pointers: @refT(@ptr(T)) refers to a pointer
+i32 ~~ @sint();
+set ~~ @fn[[t ~@refT(@ptr(i32)), v ~@ptr(i32)], @void(), t = v];
+x ~i32 = 1;
+y ~i32 = 2;
+p ~@ptr(i32) = @where x;
+set(p, @where y);
+@at(p) == 2

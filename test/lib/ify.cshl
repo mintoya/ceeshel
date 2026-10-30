@@ -1,13 +1,18 @@
+ifyT ~~ @fn[
+  [T ~@ast(),cnd ~@ast(), a~@ast(),b~@ast()], @ast(),
+  { 
+  result ~~ @gensym(result);
+  '{
+    `result ~ `T;
+    @if[`cnd,
+      `result = `a,
+      `result = (`b)];
+    `result
+}}];
+ify ~~ @fn[
+  [cnd~@ast(), a~@ast(),b~@ast()], @inlineast(),
+    ifyT[`'@typeof(`a), `cnd, `a, `b]];
 @struct{
-  ify ~~ @fn[
-    [cnd~@ast(), a~@ast(),b~@ast()], @inlineast(),
-    { 
-    result ~~ @gensym(result);
-    '{
-      `result ~ @typeof(`a);
-      @if[`cnd,
-        `result = `a,
-        `result = (`b)];
-      `result
-  }}];
+  ifyT ~~ ifyT;
+  ify ~~ ify;
 }

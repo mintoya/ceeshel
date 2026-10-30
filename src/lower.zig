@@ -70,7 +70,6 @@ const Field = struct { name: []const u8, type: typeid, default: ?Value };
 const StructInfo = struct { scope: *Scope, type: typeid, fields: List(Field) = .empty, members: List([]const u8) = .empty };
 const tuple_id = std.math.maxInt(u32); // tuples are structural
 
-
 const Place = struct {
     where: union(enum) { local: struct { func: u32, inst: InstIdx }, global: u32 },
     type: typeid, // held; const when the place is constant
@@ -129,6 +128,9 @@ scratch: ?u32 = null, // the function @typeof lowers into; never run or emitted
 comptime_results: std.StringHashMapUnmanaged(Value) = .empty,
 t: struct { void: typeid, bool: typeid, int: typeid, type: typeid, ast: typeid, inlineast: typeid, any: typeid, @"fn": typeid, builtin: typeid, schar: typeid },
 err: ?struct { code: []const u8, detail: []const u8, at: astpos } = null,
+// the expression @log is given: when it's an inline call, its expansion is printed
+log_call: ?astpos = null,
+log_expansion: ?Value = null,
 
 pub fn init(arena: Allocator, io: std.Io, ast: *Asth.AstState, pool: *Pool) Error!Sema {
     const P = Pool.helpers;
@@ -221,6 +223,18 @@ pub fn srcOf(s: *Sema, a: astpos) ?Asth.SrcRef {
         .call => |c| c.pos,
     };
 }
+// "file:line:col: ", or nothing for a node with no source
+pub fn fmtAt(s: *Sema, a: astpos) AtFmt {
+    return .{ .s = s, .a = a };
+}
+const AtFmt = struct {
+    s: *Sema,
+    a: astpos,
+    pub fn format(self: AtFmt, w: *std.Io.Writer) std.Io.Writer.Error!void {
+        const src = self.s.srcOf(self.a) orelse return;
+        try w.print("{f}: ", .{Asth.SrcFmt{ .state = self.s.ast, .src = src }});
+    }
+};
 // a new id node, its text in the generic buffer
 fn makeId(s: *Sema, name: []const u8) Error!astpos {
     const generic = &s.ast.files.items[0].content.buffer;
@@ -257,7 +271,7 @@ fn astEql(s: *Sema, x: astpos, y: astpos) Allocator.Error!bool {
 // an AST's structure, for an instance key
 fn keyAst(s: *Sema, key: *List(u8), x: astpos) Allocator.Error!void {
     const n = s.node(x);
-    try key.append(s.arena, @intFromEnum(std.meta.activeTag(n)));
+    try key.append(s.arena, @backingInt(std.meta.activeTag(n)));
     if (n != .call) {
         const t = s.text(x);
         try key.appendSlice(s.arena, std.mem.asBytes(&@as(u32, @intCast(t.len))));
@@ -266,6 +280,29 @@ fn keyAst(s: *Sema, key: *List(u8), x: astpos) Allocator.Error!void {
     const kids = try s.children(x);
     try key.appendSlice(s.arena, std.mem.asBytes(&@as(u32, @intCast(kids.len))));
     for (kids) |k| try s.keyAst(key, k);
+}
+// a known value by what it holds: an @int's bytes point at its digits, and
+// an AST is by its structure, also inside structs and arrays
+fn keyValue(s: *Sema, key: *List(u8), at: astpos, v: Value) Error!void {
+    const t = try s.unconst(v.type);
+    if (!s.isComptime(t)) return key.appendSlice(s.arena, v.bytes);
+    if (t == s.t.int) {
+        const c = try s.toBig(v);
+        try key.append(s.arena, @intFromBool(c.positive));
+        try key.appendSlice(s.arena, std.mem.asBytes(&@as(u32, @intCast(c.limbs.len))));
+        return key.appendSlice(s.arena, std.mem.sliceAsBytes(c.limbs));
+    }
+    if (t == s.t.ast or t == s.t.inlineast) return s.keyAst(key, asU32(v));
+    if (s.structOf(t)) |st| {
+        for (0..st.fields.len) |i| try s.keyValue(key, at, try s.slice(at, t, v.bytes, @intCast(i)));
+        return;
+    }
+    if (s.arrayOf(t)) |arr| {
+        const size = (try s.layoutOf(at, arr.elem)).size;
+        for (0..arr.len) |i| try s.keyValue(key, at, .{ .type = arr.elem, .bytes = v.bytes[i * size ..][0..size] });
+        return;
+    }
+    return key.appendSlice(s.arena, v.bytes);
 }
 
 // ---- values
@@ -375,7 +412,8 @@ fn refT(s: *Sema, t: typeid) !typeid {
 }
 fn ptrTo(s: *Sema, t: typeid) !typeid {
     var mask = s.ty(t).maks;
-    mask.ptr += 1;
+    std.debug.assert(!mask.refaddr);
+    if (mask.ref) mask.refaddr = true else mask.ptr += 1;
     return s.withMask(t, mask);
 }
 fn constT(s: *Sema, t: typeid) !typeid {
@@ -393,15 +431,16 @@ fn unconst(s: *Sema, t: typeid) !typeid {
 }
 fn isRef(s: *Sema, t: typeid) bool {
     const m = s.ty(t).maks;
-    return m.ref and m.ptr == 0;
+    return m.ref and !m.refaddr;
 }
 fn isPtr(s: *Sema, t: typeid) bool {
-    return s.ty(t).maks.ptr != 0;
+    const m = s.ty(t).maks;
+    return m.refaddr or (!m.ref and m.ptr != 0);
 }
 // what an address or a reference points to
 pub fn pointee(s: *Sema, t: typeid) !typeid {
     var mask = s.ty(t).maks;
-    if (mask.ptr != 0) mask.ptr -= 1 else mask.ref = false;
+    if (mask.refaddr) mask.refaddr = false else if (mask.ref) mask.ref = false else mask.ptr -= 1;
     return s.withMask(t, mask);
 }
 fn isConst(s: *Sema, t: typeid) bool {
@@ -1475,7 +1514,8 @@ fn callBuiltin(s: *Sema, b: *Block, sc: *Scope, a: astpos, bi: Builtin, args: []
         .as => {
             try s.argCount(a, args, 2);
             const t = try s.lowerType(sc, args[1]);
-            return .{ .val = try s.cast(b, a, try s.rvalue(b, args[0], try s.lower(b, sc, args[0], null)), t) };
+            // t is the operand's destination, so [a, b] as T builds a T
+            return .{ .val = try s.cast(b, a, try s.rvalue(b, args[0], try s.lower(b, sc, args[0], t)), t) };
         },
         .arr => {
             try s.argCount(a, args, 2);
@@ -1763,6 +1803,34 @@ fn callBuiltin(s: *Sema, b: *Block, sc: *Scope, a: astpos, bi: Builtin, args: []
             try s.argCount(a, args, 1);
             return s.fail(a, "COMPILE_ERROR", "{s}", .{try s.stringArg(sc, args[0])});
         },
+        .log => {
+            try s.argCount(a, args, 1);
+            const outer = .{ s.log_call, s.log_expansion };
+            s.log_call = args[0];
+            s.log_expansion = null;
+            const r = try s.lower(b, sc, args[0], dest);
+            const expansion = s.log_expansion;
+            s.log_call, s.log_expansion = outer;
+            const t = try s.heldType(b, r);
+            const x = args[0];
+            // a known value, or one in compile-time memory, is shown
+            const v: ?Value = switch (r) {
+                .val => |v| if (v == .value) v.value else null,
+                .place => |p| if (p == .value) (try s.load(b, x, r)).value else null,
+            };
+            var line: std.Io.Writer.Allocating = .init(s.arena);
+            const w = &line.writer;
+            if (expansion) |e| w.print("expands to {f}", .{s.fmtValue(e)}) catch {};
+            if (t != s.t.void) {
+                if (expansion != null) w.writeAll(", giving ") catch {};
+                if (v) |known_v|
+                    w.print("{f} ~{f}", .{ s.fmtValue(known_v), s.fmtType(t) }) catch {}
+                else
+                    w.print("~{f} at runtime", .{s.fmtType(t)}) catch {};
+            } else if (expansion == null) w.writeAll("void") catch {};
+            std.debug.print("{f}log: {s}\n", .{ s.fmtAt(a), line.written() });
+            return r;
+        },
         .compiles => {
             try s.argCount(a, args, 1);
             var scratch: Block = .{ .func = b.func, .branch = b.branch };
@@ -1794,6 +1862,19 @@ fn callBuiltin(s: *Sema, b: *Block, sc: *Scope, a: astpos, bi: Builtin, args: []
             const ns = s.namespace(t) orelse return s.fail(args[0], "USING_NOT_STRUCT", "{f} has no namespace", .{s.fmtType(t)});
             var it = ns.names.iterator();
             while (it.next()) |e| try s.bind(sc, a, e.key_ptr.*, e.value_ptr.*);
+            return s.voidRes();
+        },
+        .unbind => {
+            try s.argCount(a, args, 1);
+            const name = try s.memberName(sc, args[0]);
+            if (!sc.names.remove(name)) return s.fail(args[0], "UNBOUND_ID", "{s} isn't bound in this scope", .{name});
+            if (sc.struct_id) |id| {
+                const ms = &s.structs.items[id].members;
+                for (ms.items, 0..) |m, i| if (eq(m, name)) {
+                    _ = ms.orderedRemove(i);
+                    break;
+                };
+            }
             return s.voidRes();
         },
         .path => {
@@ -1875,6 +1956,7 @@ fn import(s: *Sema, a: astpos, path: []const u8) Error!Value {
     const entry = Asth.Ast.parse(s.io, .{ .filename = try s.arena.dupeSentinel(u8, path, 0) }, s.ast) catch |e| switch (e) {
         error.OutOfMemory => return error.OutOfMemory,
         error.FileNotFound => return s.fail(a, "IMPORT_MISSING", "{s}", .{path}),
+        error.SyntaxError => return s.fail(a, "PARSE", "syntax error at {f}", .{Asth.SrcFmt{ .state = s.ast, .src = s.ast.syntax_error.? }}),
         else => return s.fail(a, "IMPORT", "{s}: {t}", .{ path, e }),
     };
     const file = try s.arena.create(Scope);
@@ -2050,7 +2132,7 @@ fn callFn(s: *Sema, b: *Block, sc: *Scope, a: astpos, fid: u32, given: []const A
         for (p.runtime.items) |rp| try p.key.appendSlice(s.arena, rp.ref.value.bytes);
         if (s.comptime_results.get(p.key.items)) |v| return known(v);
     }
-    const res = try s.runNow(b, sc, f, inst, ret, &p, dest);
+    const res = try s.runNow(b, sc, a, f, inst, ret, &p, dest);
     if (cacheable and res == .val and res.val == .value and s.isComptime(res.val.value.type))
         try s.comptime_results.put(s.arena, p.key.items, res.val.value);
     return res;
@@ -2166,11 +2248,7 @@ fn bindParams(s: *Sema, b: *Block, sc: *Scope, a: astpos, inst: *Scope, fid: u32
         try p.key.appendSlice(s.arena, std.mem.asBytes(&rt));
         if (s.isComptime(rt)) {
             try s.bind(inst, info.name_ast, info.name, .{ .value = r.value });
-            if (rt == s.t.int) {
-                const c = try s.toBig(r.value);
-                try p.key.append(s.arena, @intFromBool(c.positive));
-                try p.key.appendSlice(s.arena, std.mem.sliceAsBytes(c.limbs));
-            } else try p.key.appendSlice(s.arena, r.value.bytes);
+            try s.keyValue(&p.key, given_at, .{ .type = rt, .bytes = r.value.bytes });
             continue;
         }
         try p.runtime.append(s.arena, .{ .name = info.name, .at = info.name_ast, .ref = try s.retypeValue(b, a, r, rt), .type = rt });
@@ -2181,12 +2259,18 @@ fn bindParams(s: *Sema, b: *Block, sc: *Scope, a: astpos, inst: *Scope, fid: u32
 }
 
 // the body lowered here, with the arguments as they are
-fn runNow(s: *Sema, b: *Block, sc: *Scope, f: Function, inst: *Scope, ret: typeid, p: *const Bound, dest: ?typeid) Error!Res {
+fn runNow(s: *Sema, b: *Block, sc: *Scope, a: astpos, f: Function, inst: *Scope, ret: typeid, p: *const Bound, dest: ?typeid) Error!Res {
     // a compile-time result: the body runs now, its variables in compile-time
-    // memory; a runtime argument is there only for its type
+    // memory; a runtime-typed argument known now is its value, one that
+    // isn't is there only for its type
     if (ret != s.t.inlineast and ret != s.t.any and s.isComptime(ret)) {
+        const cs = try s.newScope(inst);
+        for (p.runtime.items) |rp| try s.bind(cs, rp.at, rp.name, switch (rp.ref) {
+            .value => |v| .{ .value = v },
+            .inst => p.types.names.get(rp.name).?,
+        });
         var cb: Block = .{ .func = null };
-        const res = try s.lower(&cb, p.types, f.body, ret);
+        const res = try s.lower(&cb, cs, f.body, ret);
         return .{ .val = try s.coerce(&cb, f.body, res, ret) };
     }
     for (p.runtime.items) |rp| try s.bind(inst, rp.at, rp.name, switch (rp.ref) {
@@ -2199,6 +2283,7 @@ fn runNow(s: *Sema, b: *Block, sc: *Scope, f: Function, inst: *Scope, ret: typei
         const r = try s.load(b, f.body, res);
         if (r != .value or (r.value.type != s.t.ast and r.value.type != s.t.inlineast))
             return s.fail(f.body, "EXPECTED_AST", "an inline function returns an AST", .{});
+        if (s.log_call == a) s.log_expansion = r.value;
         // an inline result is expanded where the call was
         return s.lower(b, sc, asU32(r.value), dest);
     }
@@ -2280,6 +2365,7 @@ const TypeFmt = struct {
         const x = s.ty(self.t);
         if (x.maks.@"comptime") try w.writeAll("comptime ");
         if (x.maks.@"const") try w.writeAll("const ");
+        if (x.maks.refaddr) try w.writeAll("*");
         if (x.maks.ref) try w.writeAll("&");
         for (0..@as(usize, x.maks.ptr)) |_| try w.writeAll("*");
         switch (x.type) {

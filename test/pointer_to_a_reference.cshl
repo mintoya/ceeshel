@@ -1,0 +1,4 @@
+// error: REF_OF_REF
+i32 ~~ @sint();
+p ~@ptr(@refT(i32));
+1

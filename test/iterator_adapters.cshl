@@ -1,0 +1,23 @@
+// range |> map |> filter |> until |> each; a body sees the caller's
+// compile-time names, and each's body changes the caller's variables
+@using @import @path "lib/iterator.cshl";
+@using @import @path "lib/meta.cshl";
+k ~~ 2;
+sum_to ~~ [n ~i32] <<fn>> @struct{
+  sum~i32;
+  count~i32;
+} {
+  result ~@returntype()= [0,0];
+  range(0 as i32, n) 
+    |> map _ * k
+    |> filter (_ % 3) == 0
+    |> until _ > 14 
+    |> each {
+      result.sum = result.sum + _;
+      result.count = result.count + 1;
+    };
+  result
+};
+sum_to(10) |> 
+  (_.sum == 18) 
+    and (_.count == 3)
