@@ -1,7 +1,9 @@
+const Pool = @This();
+
 const std = @import("std");
 const List = std.ArrayList;
 const Allocator = std.mem.Allocator;
-const big = std.math.big;
+const Big = std.math.big.int.Const;
 pub const Type = @import("type.zig");
 
 pub const typeid = u32;
@@ -20,12 +22,8 @@ types: List(Type) = .empty,
 parts: std.StringHashMapUnmanaged(u32) = .empty,
 type_map: std.AutoHashMapUnmanaged(Type, typeid) = .empty,
 
-int_map: std.StringHashMapUnmanaged(big.int.Const) = .empty,
-
 strings: List([]const u8) = .empty,
 string_map: std.StringHashMapUnmanaged(strid) = .empty,
-
-const Pool = @This();
 
 pub fn init(alloc: Allocator) Allocator.Error!Pool {
     var self: Pool = .{ .alloc = alloc, .keys = .init(alloc) };
@@ -37,7 +35,6 @@ pub fn deinit(self: *Pool) void {
     self.type_map.deinit(self.alloc);
     self.extra.deinit(self.alloc);
     self.parts.deinit(self.alloc);
-    self.int_map.deinit(self.alloc);
     self.strings.deinit(self.alloc);
     self.string_map.deinit(self.alloc);
     self.keys.deinit();
@@ -147,19 +144,16 @@ pub const helpers = struct {
 };
 
 pub const LayoutError = error{NoLayout};
-pub const Layout = struct { size: u64, alignment: u64 };
+pub const Layout = struct { size: u64, alignment: u16 };
 
 pub fn layout(self: *const Pool, ti: typeid) LayoutError!Layout {
-    const t = helpers.get(self, ti);
-    if (t.maks.ref or t.maks.ptr != 0) return .{
-        .size = @sizeOf(*anyopaque),
-        .alignment = @alignOf(*anyopaque),
-    };
     const of = struct {
         pub fn of(comptime T: type) Layout {
             return .{ .size = @sizeOf(T), .alignment = @alignOf(T) };
         }
     }.of;
+    const t = helpers.get(self, ti);
+    if (t.maks.ref or t.maks.ptr > 0) return of(*anyopaque);
     return switch (t.type) {
         .void => .{ .size = 0, .alignment = 1 },
         .bool => .{ .size = 1, .alignment = 1 },
@@ -169,9 +163,8 @@ pub fn layout(self: *const Pool, ti: typeid) LayoutError!Layout {
         .cslong, .culong => of(c_long),
         .cslonglong, .culonglong => of(c_longlong),
         .fnptr => of(*const fn () callconv(.c) void),
-        .type, .@"fn", .builtin => of(u32),
-        .ast, .inlineast => of(u32),
-        .int => of(big.int.Const),
+        .type, .@"fn", .builtin, .ast, .inlineast => of(u32),
+        .int => of(Big),
         .array => bl: {
             const a = helpers.array_of(self, t);
             const e = try self.layout(a.elem);
@@ -187,7 +180,7 @@ pub fn layout(self: *const Pool, ti: typeid) LayoutError!Layout {
             }
             break :blk .{ .size = std.mem.alignForward(u64, size, alignment), .alignment = alignment };
         },
-        .any, .ctag => error.NoLayout,
+        .any, .ctag => LayoutError.NoLayout,
     };
 }
 pub fn offset_of(self: *const Pool, ti: typeid, i: usize) LayoutError!u64 {

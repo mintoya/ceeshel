@@ -190,12 +190,12 @@ type: TypeBase,
 maks: packed struct {
     @"volatile": bool = false,
     @"const": bool = false,
-    ref: bool = false,
     @"comptime": bool = false,
-    // a reference is outside the pointers (a reference to a pointer); there
-    // are no pointers to references, except the address of a place holding
-    // one, which is this
-    refaddr: bool = false,
+    ref: enum(u2) {
+        none,
+        ref, //  referance
+        addr, // referance pointer
+    } = .none,
     ptr: @Int(.unsigned, @bitSizeOf(u32) - 5) = 0,
 },
 data: u32,
