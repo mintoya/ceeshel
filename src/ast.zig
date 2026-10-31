@@ -6,9 +6,8 @@ const ts = @import("tree-sitter");
 pub const filepos = u32;
 pub const astpos = u32;
 
-test "alignment" {
-    if (@alignOf(SrcRef) != @alignOf(u32))
-        @compileError("srcref has to fit a list of u32's'");
+comptime {
+    std.debug.assert(@alignOf(SrcRef) == @alignOf(u32));
 }
 pub const Ast = union(enum(u8)) {
     // a call's children are asts[start..][0..len]: head, then arguments

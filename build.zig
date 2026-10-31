@@ -25,7 +25,6 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // the parser, generated into the cache: rerun only when grammar.js changes
     const generate = b.addSystemCommand(&.{ "tree-sitter", "generate" });
     generate.setCwd(b.path("grammar"));
     generate.addFileArg(b.path("grammar/grammar.js"));
