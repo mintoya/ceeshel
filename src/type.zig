@@ -17,7 +17,7 @@ pub const builtins = enum(u8) {
     inlineast, // @inlineast() same as an ast but when returned by a function, immeediatley unquoted
     any, //       @any() marker in function that variable can be of any type, cannot exist as an actual variable even at compile time
     int, //       @int() type of an arbitrary precision compile time integer
-    // runtime integers, one per C type (spelling still open in spec.md)
+    // runtime integers
     schar, //     @schar() signed char
     sshort, //    @sshort() signed short
     sint, //      @sint() signed int
@@ -32,14 +32,15 @@ pub const builtins = enum(u8) {
     ptr, //       @ptr(T) pointer to T
     refT, //      @refT(T) reference to T: a place, bound once; not of a reference
     fnptr, //     @fnptr[[T, U], R] function pointer, runtime types only; @comptime is stripped
-    @"comptime", // @comptime(T) T in compile-time memory: must be known, a runtime value is an error
+    @"comptime", //@comptime(T) comptime of t
+    @"const", //  @const(T) T constant  of t
+    @"volatile", //@const(T) T constant  of t
     @"struct", // @struct{...} struct type: runtime declarations are fields, the rest its namespace; @struct `x builds it from the AST x holds
     this, //      @this() the struct being declared
     ctype, //     @ctype("name") a C type, emitted by that name
     // functions
     @"fn", //     @fn[[params], ret, body] a function; unquotes written in it fire at definition
     returntype, // @returntype() the enclosing function's return type
-    yielded, //   @yielded() in deferred code, the value its scope yielded
     // control flow
     @"if", //     @if[c, then, else] else optional; yields nothing; a known c lowers only the taken branch
     loop, //      @loop(body) repeats body until @break()
@@ -47,6 +48,7 @@ pub const builtins = enum(u8) {
     @"continue", // @continue() the next pass of the loop, the same way
     cwhile, //    @cwhile[c, body] expands body while the known c holds, checked before each whole pass
     @"defer", //  @defer(x) runs x when the scope ends
+    yielded, //   @yielded() in deferred code, the value its scope yielded, not the actual value it's about to yield
     // places
     where, //     @where x address of the place x; of a reference, a pointer to its target
     at, //        @at p the place pointer p points to
@@ -70,6 +72,7 @@ pub const builtins = enum(u8) {
     countof, //   @countof(X) struct members in order, array length, or fn/fnptr params + 1
     membertype, // @membertype(T) an array's member type, or a pointer's target
     fieldname, // @fieldname(T, i) name of member i of struct T, as an id
+    fieldval, //  @fieldval(X, i) value of i'th field
     fieldtype, // @fieldtype(X, i) type of struct member i (a constant's value type), or fn/fnptr param i, the return type last
     ptrlevel, //  @ptrlevel(x) how many pointers deep the variable x is
     isreferance, // @isreferance(x) whether the variable x is a reference
@@ -79,7 +82,7 @@ pub const builtins = enum(u8) {
     // modules
     import, //    @import "file" the file's last expression, the file lowered once
     using, //     @using S binds S's namespace members here
-    unbind, //    @unbind(name) removes name from this scope, not an enclosing one, so it can be declared again
+    unbind, //    @unbind(name) removes name from this scope, not an enclosing one, so it can be declared again TODO: not optimal
     path, //      @path "p" p relative to this source file; @path() this file
     //c
     cinclude, //  @cinclude("h") #include in the C output, top level only
@@ -186,16 +189,22 @@ pub const TypeBase = enum(u8) {
     @"fn",
 };
 
+pub const Ref = enum(u2) {
+    none,
+    ref, //  referance
+    addr, // referance pointer // not inside the language
+};
+
+fn Mask(comptime ptr_bits: u16) type {
+    return packed struct {
+        @"volatile": bool = false,
+        @"const": bool = false,
+        @"comptime": bool = false,
+        ref: Ref = .none,
+        ptr: @Int(.unsigned, ptr_bits) = 0,
+    };
+}
+
 type: TypeBase,
-maks: packed struct {
-    @"volatile": bool = false,
-    @"const": bool = false,
-    @"comptime": bool = false,
-    ref: enum(u2) {
-        none,
-        ref, //  referance
-        addr, // referance pointer
-    } = .none,
-    ptr: @Int(.unsigned, @bitSizeOf(u32) - 5) = 0,
-},
+maks: Mask(@bitSizeOf(u32) - @bitSizeOf(Mask(0))), // should be 32 bits
 data: u32,
