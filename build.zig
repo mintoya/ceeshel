@@ -25,17 +25,19 @@ pub fn build(b: *std.Build) void {
         },
     });
 
+    // the parser, generated into the cache: rerun only when grammar.js changes
     const generate = b.addSystemCommand(&.{ "tree-sitter", "generate" });
     generate.setCwd(b.path("grammar"));
-    generate.addFileInput(b.path("grammar/grammar.js"));
-    mod.addCSourceFile(.{ .file = b.path("grammar/src/parser.c") });
-    mod.addIncludePath(b.path("grammar/src"));
+    generate.addFileArg(b.path("grammar/grammar.js"));
+    generate.addArg("-o");
+    const parser_src = generate.addOutputDirectoryArg("src");
+    mod.addCSourceFile(.{ .file = parser_src.path(b, "parser.c") });
+    mod.addIncludePath(parser_src);
 
     const exe = b.addExecutable(.{
         .name = "ceeshl",
         .root_module = mod,
     });
-    exe.step.dependOn(&generate.step);
     b.installArtifact(exe);
 
     const exe_check = b.addExecutable(.{
@@ -51,7 +53,6 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
 
     const mod_tests = b.addTest(.{ .root_module = mod });
-    mod_tests.step.dependOn(&generate.step);
     const run_tests = b.addRunArtifact(mod_tests);
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);

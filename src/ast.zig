@@ -6,18 +6,25 @@ const ts = @import("tree-sitter");
 pub const filepos = u32;
 pub const astpos = u32;
 
+test "alignment" {
+    if (@alignOf(SrcRef) != @alignOf(u32))
+        @compileError("srcref has to fit a list of u32's'");
+}
 pub const Ast = union(enum(u8)) {
-    pub const Block = struct {
-        block: astpos, // null terminated span in the src lst
+    // a call's children are asts[start..][0..len]: head, then arguments
+    pub const Call = struct {
+        start: astpos,
+        len: u32,
         pos: SrcRef,
     };
-    null: void,
+    none: void, // the empty AST
     id: SrcRef,
     str: SrcRef,
     num: SrcRef,
-    call: Block, // head, then arguments;
-                 // [a, b] is ([] a b),
-                 // {a; b} is ({} a b)
+    call: u32, // an index into calls;
+    // [a, b] is ([] a b),
+    // {a; b} is ({} a b),
+    // x ~T = v is (~ x T v =), x ~~ v is (~ x none v ~), x ~T is (~ x T none none)
     pub fn parse(
         io: std.Io,
         src: union(enum) {
@@ -55,13 +62,12 @@ pub const Ast = union(enum(u8)) {
         }
 
         const pos: astpos = @intCast(ctx.asts.items.len);
-        try ctx.asts.append(ctx.alloc, .null);
-        const top = try convert(ctx, fileref, root); // may move asts: store after
+        try ctx.asts.append(ctx.alloc, .none);
+        const top = try convert(ctx, fileref, root);
         ctx.asts.items[pos] = top;
         return pos;
     }
 
-    // the first node the parser couldn't place, or had to make up
     fn firstError(node: ts.Node) ts.Node {
         for (0..node.childCount()) |i| {
             const c = node.child(@intCast(i)).?;
@@ -86,21 +92,20 @@ pub const Ast = union(enum(u8)) {
         var head: ?Part = null;
         if (std.mem.eql(u8, kind, "call")) {
             if (namedField(node, "name")) |name| {
-                var marks: [2]u8 = undefined;
-                var n: usize = 0;
+                var mark: ?ts.Node = null;
+                var marks: usize = 0;
                 var i: u32 = 0;
                 while (i < node.childCount()) : (i += 1) {
                     const field = node.fieldNameForChild(i) orelse continue;
-                    if (std.mem.eql(u8, field, "function") and n < 2) {
-                        marks[n] = node.child(i).?.kind()[0];
-                        n += 1;
-                    }
+                    if (!std.mem.eql(u8, field, "function")) continue;
+                    marks += 1;
+                    if (marks == 2) mark = node.child(i).?;
                 }
-                const has_value = node.childByFieldName("value") != null;
-                head = .{ .text = if (!has_value) "~" else if (marks[n - 1] == '=') "~=" else "~~" };
+                head = .{ .text = "~" };
                 try parts.append(ctx.alloc, .{ .node = name });
-                if (namedField(node, "type")) |t| try parts.append(ctx.alloc, .{ .node = t });
-                if (namedField(node, "value")) |v| try parts.append(ctx.alloc, .{ .node = v });
+                try parts.append(ctx.alloc, if (namedField(node, "type")) |t| .{ .node = t } else .none);
+                try parts.append(ctx.alloc, if (namedField(node, "value")) |v| .{ .node = v } else .none);
+                try parts.append(ctx.alloc, if (mark) |m| .{ .node = m } else .none);
             } else {
                 var bracket: u8 = 0;
                 var i: u32 = 0;
@@ -115,7 +120,6 @@ pub const Ast = union(enum(u8)) {
                         try parts.append(ctx.alloc, .{ .node = c });
                     }
                 }
-                // a quote mark against [a, b] or (a, b) quotes the list: '[a, b] is '([a, b])
                 const marks = [_][]const u8{ "'", "`", "\\", ".." };
                 const h = head.?.node;
                 const is_mark = std.mem.eql(u8, h.kind(), "id") and for (marks) |m| {
@@ -141,7 +145,6 @@ pub const Ast = union(enum(u8)) {
         return build(ctx, fileref, node, head, parts.items);
     }
 
-    // the node in a field: a field on a hidden (x) is on its parentheses too
     fn namedField(node: ts.Node, field: []const u8) ?ts.Node {
         var i: u32 = 0;
         while (i < node.childCount()) : (i += 1) {
@@ -159,7 +162,7 @@ pub const Ast = union(enum(u8)) {
     fn build(ctx: *AstState, fileref: filepos, node: ts.Node, head: ?Part, parts: []const Part) Allocator.Error!Ast {
         const count = parts.len + @intFromBool(head != null);
         const start: astpos = @intCast(ctx.asts.items.len);
-        try ctx.asts.appendNTimes(ctx.alloc, .null, count + 1);
+        try ctx.asts.appendNTimes(ctx.alloc, .none, count);
         var slot = start;
         if (head) |h| {
             const a = try h.ast(ctx, fileref);
@@ -172,15 +175,19 @@ pub const Ast = union(enum(u8)) {
             slot += 1;
         }
 
-        return .{ .call = .{ .block = start, .pos = ref(fileref, node) } };
+        const index: u32 = @intCast(ctx.calls.items.len);
+        try ctx.calls.append(ctx.alloc, .{ .start = start, .len = @intCast(count), .pos = ref(fileref, node) });
+        return .{ .call = index };
     }
 
     const Part = union(enum) {
+        none,
         node: ts.Node,
         text: []const u8,
         list: struct { nodes: []const ts.Node, at: ts.Node }, // a [] list of these
         fn ast(self: Part, ctx: *AstState, fileref: filepos) Allocator.Error!Ast {
             switch (self) {
+                .none => return .none,
                 .list => |l| {
                     defer ctx.alloc.free(l.nodes);
                     const parts = try ctx.alloc.alloc(Part, l.nodes.len);
@@ -243,12 +250,13 @@ pub const AstState = struct {
     alloc: Allocator,
     files: List(FileItem),
     asts: List(Ast),
+    calls: List(Ast.Call),
     // where the last error.SyntaxError is
     syntax_error: ?SrcRef = null,
     pub fn init(allocator: anytype) !@This() {
-        var result = @This(){ .alloc = allocator, .files = .empty, .asts = .empty };
+        var result = @This(){ .alloc = allocator, .files = .empty, .asts = .empty, .calls = .empty };
         try result.files.append(allocator, .{ .name = "<generic>", .content = .{ .buffer = .empty } });
-        try result.asts.append(allocator, .null); // slot 0: the empty AST
+        try result.asts.append(allocator, .none); // slot 0: the empty AST
         return result;
     }
     pub fn deinit(self: *@This()) void {
@@ -258,6 +266,11 @@ pub const AstState = struct {
         };
         self.files.deinit(self.alloc);
         self.asts.deinit(self.alloc);
+        self.calls.deinit(self.alloc);
+    }
+    pub fn children(self: *const @This(), call: u32) []const Ast {
+        const c = self.calls.items[call];
+        return self.asts.items[c.start..][0..c.len];
     }
 };
 pub const AstCtx = struct {
@@ -265,18 +278,16 @@ pub const AstCtx = struct {
     ast: Ast,
     pub fn format(self: @This(), w: *std.Io.Writer) std.Io.Writer.Error!void {
         switch (self.ast) {
-            .null => try w.writeAll("null"),
+            .none => try w.writeAll("none"),
             .id, .str, .num => |s| try w.writeAll(s.toslice(self.state.files)),
-            .call => |b| try self.children(w, "(", b, ")"),
+            .call => |c| {
+                try w.writeAll("(");
+                for (self.state.children(c), 0..) |k, i| {
+                    if (i != 0) try w.writeAll(" ");
+                    try (AstCtx{ .state = self.state, .ast = k }).format(w);
+                }
+                try w.writeAll(")");
+            },
         }
-    }
-    fn children(self: @This(), w: *std.Io.Writer, open: []const u8, b: Ast.Block, close: []const u8) std.Io.Writer.Error!void {
-        try w.writeAll(open);
-        var i = b.block;
-        while (self.state.asts.items[i] != .null) : (i += 1) {
-            if (i != b.block) try w.writeAll(" ");
-            try (AstCtx{ .state = self.state, .ast = self.state.asts.items[i] }).format(w);
-        }
-        try w.writeAll(close);
     }
 };
