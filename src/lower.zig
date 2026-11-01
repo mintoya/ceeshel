@@ -16,6 +16,7 @@ const astpos = Asth.astpos;
 const Pool = @import("pool.zig");
 const typeid = Pool.typeid;
 const strid = Pool.strid;
+// just the type, thesee wont exclusivleey be stored in the pool
 const Value = Pool.Value;
 
 pub const InstIdx = u32;
@@ -62,12 +63,7 @@ pub const Function = struct {
     insts: struct { start: InstIdx, len: u32 },
 };
 const fnidx = u32;
-pub const Global = struct {
-    name: Asth.SrcRef,
-    type: typeid,
-    init: Pool.valueid,
-};
-pub const Error = error{UnexpectedNullAst};
+pub const Error = Allocator.Error || error{};
 pub const Function_pre = struct {
     params: astpos,
     ret: astpos,
@@ -77,7 +73,6 @@ pub const Function_pre = struct {
 const Sema = @This();
 // zig fmt: off
 alloc       : Allocator,
-globals     : List(Global) = .empty,
 functions   : List(Function) = .empty,
 insts       : SgList(Inst, 5, 32),
 pool        : Pool,
@@ -95,14 +90,7 @@ pub fn deinit(self: *Sema) void {
     self.functions.deinit(self.alloc);
     self.globals.deinit(self.alloc);
     self.insts.deinit(self.alloc);
+    self.astState.deinit();
     self.pool.deinit();
 }
-pub fn lower(self: *Sema, idx: astpos) Error!void {
-    return switch (self.astState.asts.items[idx]) {
-        .id => {},
-        .str => {},
-        .num => {},
-        .call => {},
-        .none => Error.UnexpectedNullAst,
-    };
-}
+pub fn lower(_: *Sema, _: astpos) Error!VRef {}
