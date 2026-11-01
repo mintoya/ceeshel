@@ -9,7 +9,6 @@ bool ~~ @bool;
     i == (0 == 1)];
 } 
   |> combine[_,@import @path "fn.cshl"]
-  |> combine[_,@import @path "ify.cshl"]
   |> combine[_,@import @path "types.cshl"]
   |> combine[_,@import @path "closure.cshl"]
   |> combine[_,@import @path "combine.cshl"]

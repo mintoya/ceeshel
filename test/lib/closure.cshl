@@ -1,12 +1,11 @@
-@using @import @path "ify.cshl";
 Ast ~~ @import @path "ast.cshl";
 closure_name_of ~~ @fn[[x ~@ast()],@ast(),
-  ify[Ast.is_decl(`x), Ast.decl_name(`x), x]];
+  @if[Ast.is_decl(`x), Ast.decl_name(`x), x]];
 closure_value_of ~~ @fn[[x ~@ast()],@ast(),
-  ify[Ast.is_decl(`x),Ast.decl_value(`x),x]];
+  @if[Ast.is_decl(`x),Ast.decl_value(`x),x]];
 closure_type_of ~~ @fn[[x ~@ast()],@ast(),
-  ify[Ast.is_decl(`x),
-    ify[Ast.decl_type(`x),
+  @if[Ast.is_decl(`x),
+    @if[Ast.decl_type(`x),
       Ast.decl_type(`x),
       '@typeof(`(Ast.decl_value(`x)))],
     '@refT(@typeof(`x))]];

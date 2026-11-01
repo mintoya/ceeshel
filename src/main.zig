@@ -1,6 +1,8 @@
 const std = @import("std");
 const args = @import("args");
 const Testing = @import("testing.zig");
+const Ast = @import("ast.zig");
+const Lower = @import("lower.zig");
 
 test {
     _ = Testing;
@@ -57,6 +59,19 @@ pub fn main(init: std.process.Init) !u8 {
     if (parsed.positionals.len != 1) {
         println("expected one input file; use --help for usage", .{});
         return 1;
+    }
+
+    var sema = try Lower.init(init.gpa);
+    defer sema.deinit();
+
+    const entry = sema.parseFile(init.io, parsed.positionals[0]) catch |err| {
+        if (err != error.SyntaxError) return err;
+        println("PARSE: syntax error at {f}", .{Ast.SrcFmt{ .state = &sema.astState, .src = sema.astState.syntax_error.? }});
+        return 1;
+    };
+    if (parsed.options.ast) {
+        println("{f}", .{Ast.AstCtx{ .state = &sema.astState, .ast = sema.astState.asts.items[entry] }});
+        return 0;
     }
 
     if (true)

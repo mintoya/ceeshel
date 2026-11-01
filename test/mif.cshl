@@ -1,0 +1,18 @@
+@using @import @path "meta.cshl";
+
+if ~~ [a ~ast] <<fn>> inline {
+  cnd ~~ @get[a,0];
+  arm ~~ Ast.items[`(@get[a,1])];
+  then ~~ @get[arm,0];
+  else ~~ @get[arm,1];
+  '@if[`cnd,`then,`else]
+};
+
+(if true 
+  (true,false)) 
+and (if false 
+  (false,true))
+and (if false 
+  (false,
+  if true 
+    (true,false)))

@@ -1,8 +1,7 @@
 @using @import @path "lib/optional.cshl";
-@using @import @path "lib/ify.cshl";
 i32 ~~ @sint();
 first ~~ @fn[[n ~i32], ?(i32), 
-  ify[n>0,
+  @if[n>0,
     n as (? i32),null]];
 a ~= first(0);
 b ~= first(5);
