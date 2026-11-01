@@ -219,8 +219,8 @@ pub const FileItem = struct {
 };
 pub const SrcRef = struct {
     fileref: filepos,
-    len: u32,
     offset: u32,
+    len: u32,
     pub fn toslice(self: @This(), state: List(FileItem)) []const u8 {
         const file = state.items[self.fileref];
         return switch (file.content) {
@@ -252,7 +252,7 @@ pub const AstState = struct {
     calls: List(Ast.Call),
     // where the last error.SyntaxError is
     syntax_error: ?SrcRef = null,
-    pub fn init(allocator: anytype) !@This() {
+    pub fn init(allocator: Allocator) !@This() {
         var result = @This(){ .alloc = allocator, .files = .empty, .asts = .empty, .calls = .empty };
         try result.files.append(allocator, .{ .name = "<generic>", .content = .{ .buffer = .empty } });
         try result.asts.append(allocator, .none); // slot 0: the empty AST
