@@ -1,6 +1,6 @@
 // as cshl's referance_types
 i32 ~~ @sint();
-x ~i32 = 5;
+x ~i32 = 5 as i32;
 r ~@refT(i32) = x;
 r = 67;
 r = r + 1;

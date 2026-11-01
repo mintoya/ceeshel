@@ -1,7 +1,7 @@
 // @unbind takes a name out of this scope, so it can be declared again,
 // including one brought in by @using
 i32 ~~ @sint();
-x ~i32 = 1;
+x ~i32 = 1 as i32;
 @unbind(x);
 x ~i32 = 2;
 @using @struct{ y ~~ 2; };

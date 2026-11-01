@@ -2,7 +2,7 @@
 // With ast parameters an overload keeps the short circuit.
 ast ~~ @ast(); inline ~~ @inlineast(); i32 ~~ @sint();
 builtin_and ~~ and;
-calls ~i32 = 0;
+calls ~i32 = 0 as i32;
 counted ~~ @fn[[], @bool(), { calls = calls + 1; 1 == 1 }];
 x ~~ {
   and ~~ @fn[[l ~ast, r ~ast], inline, '{ calls = calls + 10; builtin_and[`(l), `(r)] }];

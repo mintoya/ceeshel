@@ -1,7 +1,7 @@
 // = is a name: this one sends x = v and x ~T = v to x's __set when that
 // compiles, and assigns as the builtin does otherwise
 u32 ~~ @uint(); any ~~ @any();
-writes ~u32 = 0;
+writes ~u32 = 0 as u32;
 split ~~ @struct{
   Self ~~ @this();
   lo ~u32;

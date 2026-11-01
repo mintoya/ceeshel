@@ -1,4 +1,4 @@
 // error: CANNOT_CAST
-x ~@sint() = 1;
+x ~@sint() = 1 as @sint();
 p ~@ptr(@sint()) = @where(x);
 q ~@ptr(@uint()) = p

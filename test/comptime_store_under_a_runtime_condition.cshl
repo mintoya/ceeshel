@@ -1,6 +1,6 @@
 // error: COMPTIME_STORE_IN_RUNTIME_BRANCH
 i32 ~~ @sint();
 c ~= 0;
-n ~i32 = 5;
+n ~i32 = 5 as i32;
 @if[n > 3, c = 1];
 c == 1

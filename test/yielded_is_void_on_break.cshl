@@ -1,6 +1,6 @@
 // on @break a deferred body's @yielded() is void
 i32 ~~ @sint(); void ~~ @void();
-seen ~i32 = 0;
+seen ~i32 = 0 as i32;
 @loop{
   @defer(@if[@typeof(@yielded()) == void, seen = seen + 1]);
   @break();

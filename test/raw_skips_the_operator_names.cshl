@@ -1,7 +1,7 @@
 // @raw(x): x with the builtin operators, whatever is declared around it,
 // so a + can add without calling itself
 i32 ~~ @sint(); any ~~ @any(); ast ~~ @ast();
-calls ~i32 = 0;
+calls ~i32 = 0 as i32;
 + ~~ @fn[[arg ~any], any, @raw({ calls = calls + 1; arg.0 + arg.1 })];
 P ~~ @struct{ x ~i32; };
 @id(".") ~~ @fn[[p ~ast, name ~ast], @inlineast(), '99];

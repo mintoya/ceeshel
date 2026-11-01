@@ -1,6 +1,6 @@
 // a declaration's type and value may be parenthesized
 i32 ~~ @sint();
-a ~i32 = 2;
+a ~i32 = 2 as i32;
 x ~(i32) = (a + 3);
 y ~~ (x * 2);
 (x == 5) and (y == 10)
