@@ -53,6 +53,8 @@ pub const builtins = enum(u8) {
     where, //     @where x address of the place x; of a reference, a pointer to its target
     at, //        @at p the place pointer p points to
     ref, //       @ref(x) x as a reference
+    alloc, //     @alloc[T] allocate uninitialized compile-time storage for one T; returns @ptr(T)
+    free, //      @free[V] release storage returned by @alloc; yields void
     // ast metaprogramming
     len, //       @len[x] children of an AST, length of an array or a tuple
     get, //       @get[x, i] child i of an AST (null past the end), element of an array or tuple; @get[x, i, j] the AST's children i to j as a call, reversed when i > j
@@ -62,7 +64,7 @@ pub const builtins = enum(u8) {
     id, //        @id("s") the id spelled s, any text
     compileError, // @compileError("msg") fails compilation with msg
     compiles, //  @compiles(x) whether x lowers without an error; its code is discarded
-    log, //       @log(x) prints what x expands to if an inline call, its value if known, and its type; yields x
+    log, //       @log(x) prints x and it's type
     raw, // @raw(x): x with every operator name the builtin
     // reflection and layout
     typeof, //    @typeof(x) the type of x, lowered but never run; a reference gives its target, const is dropped

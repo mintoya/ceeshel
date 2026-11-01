@@ -1,8 +1,11 @@
 const std = @import("std");
 const args = @import("args");
-const Ast = @import("ast.zig");
-const Pool = @import("pool.zig");
-const Lower = @import("lower.zig");
+const Testing = @import("testing.zig");
+
+test {
+    _ = Testing;
+    _ = @import("lower.zig");
+}
 
 pub fn println(comptime fmt: []const u8, args_: anytype) void {
     return std.debug.print(fmt ++ "\n", args_);
@@ -13,6 +16,7 @@ const Options = struct {
     ast: bool = false,
     // stdin: bool = false,
     out: ?[]const u8 = null,
+    testdir: ?[]const u8 = null,
 
     pub const shorthands = .{
         .h = "help",
@@ -25,6 +29,7 @@ const Options = struct {
             .help = "print this help and exit",
             .ast = "print the tree instead of evaluating",
             .out = "write output to this file",
+            .testdir = "run tests from directory",
             // .stdin = "parse from stdin",
         },
     };
@@ -42,20 +47,19 @@ pub fn main(init: std.process.Init) !u8 {
         return 0;
     }
 
+    if (parsed.options.testdir) |directory| {
+        return Testing.run(init.io, init.gpa, directory) catch |err| {
+            println("cannot run tests in {s}: {s}", .{ directory, @errorName(err) });
+            return 1;
+        };
+    }
+
     if (parsed.positionals.len != 1) {
         println("expected one input file; use --help for usage", .{});
         return 1;
     }
 
-    var state = try Ast.AstState.init(init.gpa);
-    defer state.deinit();
-    const entry = try Ast.Ast.parse(init.io, .{ .filename = parsed.positionals[0] }, &state);
-    if (parsed.options.ast) {
-        println("{f}", .{Ast.AstCtx{ .state = &state, .ast = state.asts.items[entry] }});
-        return 0;
-    }
-
-    var pool = try Pool.init(init.gpa);
-    defer pool.deinit();
+    if (true)
+        return error.UnImplemented;
     return 0;
 }

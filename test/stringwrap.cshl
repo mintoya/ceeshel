@@ -1,0 +1,21 @@
+@using @import @path "lib/meta.cshl";
+
+memstr ~~ [a ~any] <<fn>> any {
+  size    ~~ @sizeof(a);
+  result  ~~ (arr size) i8;
+  ptr     ~= (@where a) as result;
+  @at ptr
+};
+memeq ~~ [a ~any, b ~@typeof(a)] <<fn>> bool {
+  i ~int= 0;
+  res ~bool= true;
+  @loop{
+    @if[i >= @countof(a),@break()];
+    res = (@get[a,i] == @get[b,i]);
+    @if[not(res),@break()];
+    i = i + 1;
+  };
+  res
+};
+
+memeq[memstr[i8],memstr[i8]]

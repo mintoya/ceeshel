@@ -53,11 +53,14 @@ pub fn build(b: *std.Build) void {
 
     const mod_tests = b.addTest(.{ .root_module = mod });
     const run_tests = b.addRunArtifact(mod_tests);
+    const unit_test_step = b.step("test-unit", "Run Zig unit tests");
+    unit_test_step.dependOn(&run_tests.step);
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);
-    // every test/*.cshl: its last expression must be true
+
     const run_cshl = b.addRunArtifact(exe);
-    run_cshl.addArgs(&.{ "--tests", "test" });
+    run_cshl.addArg("--testdir");
+    run_cshl.addDirectoryArg(b.path("test"));
     run_cshl.has_side_effects = true;
     test_step.dependOn(&run_cshl.step);
 }

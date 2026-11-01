@@ -139,6 +139,18 @@ pub const Ast = union(enum(u8)) {
                 if (c.isExtra() or std.mem.eql(u8, c.kind(), "empty_statement")) continue;
                 try parts.append(ctx.alloc, .{ .node = c });
             }
+            // a trailing ; ends the block with none, so it yields void
+            if (!std.mem.eql(u8, kind, "list")) {
+                var last: ?ts.Node = null;
+                i = 0;
+                while (i < node.childCount()) : (i += 1) {
+                    const c = node.child(i).?;
+                    if (c.isExtra() or std.mem.eql(u8, c.kind(), "}")) continue;
+                    last = c;
+                }
+                if (last) |l| if (std.mem.eql(u8, l.kind(), ";") or std.mem.eql(u8, l.kind(), "empty_statement"))
+                    try parts.append(ctx.alloc, .none);
+            }
         }
 
         return build(ctx, fileref, node, head, parts.items);
