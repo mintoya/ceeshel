@@ -8,15 +8,15 @@ Box ~~ @struct{
   // e only expands when v is 0
   or_else ~~ @fn[[this ~ast, e ~ast], inline, '{
     r ~i32 = (`this).v;
-    @if[r == 0, r = `e];
+    @if[r == (0 as i32), r = `e];
     r
   }];
 };
-made ~i32 = 0;
-make ~~ @fn[[n ~i32], Box, { made = made + 1; b ~Box = [n]; b }];
-used ~i32 = 0;
-use ~~ @fn[[], i32, { used = used + 1; 7 }];
-a ~= make(3):twice_plus(1);
-b ~= make(5):or_else(use());
-c ~= make(0):or_else(use());
-(a == 7) and (made == 3) and (b == 5) and (c == 7) and (used == 1)
+made ~i32 = 0 as i32;
+make ~~ @fn[[made ~@refT(i32), n ~i32], Box, { made = made + (1 as i32); b ~Box = ([n] as Box); b }];
+used ~i32 = 0 as i32;
+use ~~ @fn[[used ~@refT(i32)], i32, { used = used + (1 as i32); 7 as i32 }];
+a ~= make(made, 3 as i32):twice_plus(1 as i32);
+b ~= make(made, 5 as i32):or_else(use(used));
+c ~= make(made, 0 as i32):or_else(use(used));
+(a == (7 as i32)) and (made == (3 as i32)) and (b == (5 as i32)) and (c == (7 as i32)) and (used == (1 as i32))

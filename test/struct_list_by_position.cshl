@@ -1,4 +1,4 @@
 i32 ~~ @sint();
 P ~~ @struct{ x ~i32; y ~i32; };
-p ~P ~ [1, 2];
-(p.x == 1) and (p.y == 2)
+p ~P ~ ([1 as i32, 2 as i32] as P);
+(p.x == (1 as i32)) and (p.y == (2 as i32))

@@ -3,9 +3,9 @@ i32 ~~ @sint(); ast ~~ @ast();
 writes ~i32 = 0 as i32;
 x ~i32 = 0 as i32;
 {
-  @id("=") ~~ @fn[[t ~ast, v ~ast], @inlineast(), '@raw({ writes = writes + 1; `t = `v })];
-  x = 5;
-  x = 6;
+  @id("=") ~~ @fn[[t ~ast, v ~ast], @inlineast(), '@raw({ writes = writes + (1 as i32); `t = `v })];
+  x = 5 as i32;
+  x = 6 as i32;
 };
-x = 7;
-(x == 7) and (writes == 2)
+x = 7 as i32;
+(x == (7 as i32)) and (writes == (2 as i32))

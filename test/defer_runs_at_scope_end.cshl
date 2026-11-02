@@ -2,8 +2,8 @@
 i32 ~~ @sint();
 log ~i32 = 0 as i32;
 {
-  @defer(log = log * 10 + 1);
-  @defer(log = log * 10 + 2);
-  log = 5;
+  @defer(log = log * (10 as i32) + (1 as i32));
+  @defer(log = log * (10 as i32) + (2 as i32));
+  log = 5 as i32;
 };
-log == 521
+log == (521 as i32)

@@ -1,0 +1,6 @@
+// error: CANNOT_CAST
+// An explicit array cannot silently convert a struct element to an integer.
+i32 ~~ @sint();
+P ~~ @struct{ x ~i32; };
+p ~P = ([1 as i32] as P);
+[1 as i32, p] as @arr[2, i32]

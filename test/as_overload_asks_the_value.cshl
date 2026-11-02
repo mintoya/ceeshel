@@ -4,11 +4,18 @@ i32 ~~ @sint(); type ~~ @type();
 Celsius ~~ @struct{
   Self ~~ @this();
   deg ~i32;
-  __as ~~ @fn[[self ~Self, T ~type], T, @raw({ r ~T = [self.deg * 9 / 5 + 32]; r })];
+  __as ~~ @fn[[self ~Self, T ~type], T, 
+    @raw({ 
+      r ~T = ([self.deg * (9 as i32) / (5 as i32) + (32 as i32)] as T); 
+      r })];
 };
 F ~~ @struct{ deg ~i32; };
-c ~Celsius = [100];
+c ~Celsius= [100 as i32] as Celsius;
 f ~= c as F;
-o ~= 4 as ?(i32);
+o ~= (4 as i32) as ?(i32);
 n ~= 7 as i32;
-(f.deg == 212) and o.present and (o.value == 4) and (n == 7)
+
+(f.deg == (212 as i32)) 
+  and o.present 
+  and (o.value == (4 as i32)) 
+  and (n == (7 as i32))

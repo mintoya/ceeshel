@@ -5,8 +5,8 @@ i32 ~~ @sint();
 g ~~ @fn[[n ~i32], i32, {
   o ~@comptime(?(i32)) = null;
   @if[o.present, @compileError("starts absent")];
-  o = 5;
+  o = 5 as i32;
   a ~@arr[o.value, i32];
-  n + @countof(@typeof(a))
+  n + (@countof(@typeof(a)) as i32)
 }];
-g(1) == 6
+g(1 as i32) == (6 as i32)

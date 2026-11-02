@@ -1,9 +1,0 @@
-i32 ~~ @sint();
-n ~i32 = 0 as i32;
-i ~i32 = 0 as i32;
-@loop{
-  @defer(n = n + 1);
-  i = i + 1;
-  @if[i >= 3, @break()];
-};
-(n == 3) and (i == 3)

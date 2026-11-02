@@ -1,10 +1,10 @@
+// Runtime indexing through a reference, with iteration expressed by recur.
 i32 ~~ @sint();
-a ~@arr[4, i32] = [3, 1, 4, 1];
-i ~i32 = 0;
-sum ~i32 = 0;
-@loop{
-  @if[i >= @len[a], @break()];
-  sum = sum + @get[a, i];
-  i = i + 1;
-};
-sum == 9
+A ~~ @arr[4, i32];
+a ~A = ([3 as i32, 1 as i32, 4 as i32, 1 as i32] as A);
+sum ~~ @fn[[a ~@refT(A), i ~i32, total ~i32], i32, {
+  @if[i < (@len[a] as i32),
+    @recur[a, i + (1 as i32), total + @get[a, i]]];
+  total
+}];
+sum(a, 0 as i32, 0 as i32) == (9 as i32)

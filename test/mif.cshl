@@ -1,7 +1,9 @@
-@using @import @path "meta.cshl";
+@using @import @path "lib/meta.cshl";
 
 if ~~ [a ~ast] <<fn>> inline {
   cnd ~~ @get[a,0];
+  @if[not ast_stringeq(@get[@get[a,1],0] , "[]"),
+    @compileError "expected a block"];
   arm ~~ Ast.items[`(@get[a,1])];
   then ~~ @get[arm,0];
   else ~~ @get[arm,1];

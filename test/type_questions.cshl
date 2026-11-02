@@ -3,9 +3,9 @@ false ~@bool()~ 0 == 1;
 i32 ~~ @sint(); u8 ~~ @uint();
 P ~~ @struct{ x ~i32; y ~@arr[3, u8]; };
 Y ~~ @fieldtype(P, 1);
-add ~~ @fn[[a ~i32, b ~u8], i32, a + b];
-v ~i32 = 1;
-k ~i32 ~ 2;
+add ~~ @fn[[a ~i32, b ~u8], i32, a + (b as i32)];
+v ~i32 = 1 as i32;
+k ~i32 ~ (2 as i32);
 r ~@refT(i32) = v;
 p ~@ptr(@ptr(i32));
 (@countof(P) == 2) and (@fieldtype(P, 0) == i32)

@@ -3,8 +3,8 @@
 i32 ~~ @sint(); u8 ~~ @uchar();
 U ~~ union[a ~i32, b ~@arr[4, u8]];
 u ~U;
-u.a = 258;
+u.a = 258 as i32;
 first ~= @get[u.b, 0];
-@get[u.b, 3] = 1;
+@get[u.b, 3] = 1 as u8;
 (@sizeof(U) == 4) and (@alignof(U) == @alignof(i32))
-  and (first == 2) and (@get[u.b, 1] == 1) and (u.a == 16777474)
+  and (first == (2 as u8)) and (@get[u.b, 1] == (1 as u8)) and (u.a == (16777474 as i32))

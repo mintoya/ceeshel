@@ -9,6 +9,6 @@ P ~~ @struct{
     self.x = self.x + dx;
   }];
 };
-p ~P = [1, 2];
-p:move(10);
-(p:sum() == 13) and (P.sum[p] == 13)
+p ~P = ([1 as i32, 2 as i32] as P);
+p:move(10 as i32);
+(p:sum() == (13 as i32)) and (P.sum[p] == (13 as i32))

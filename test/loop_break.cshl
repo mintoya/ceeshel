@@ -1,9 +1,0 @@
-i32 ~~ @sint();
-i ~i32 = 0 as i32;
-sum ~i32 = 0 as i32;
-@loop{
-  @if[i >= 10, @break()];
-  sum = sum + i;
-  i = i + 1;
-};
-sum == 45

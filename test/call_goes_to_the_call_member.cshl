@@ -8,7 +8,7 @@ Counter ~~ @struct{
     self.n
   }];
 };
-c ~Counter = [0];
-c(5);
-c[2];
-(c(3) == 10) and (c.n == 10)
+c ~Counter = ([0 as i32] as Counter);
+c(5 as i32);
+c[2 as i32];
+(c(3 as i32) == (10 as i32)) and (c.n == (10 as i32))

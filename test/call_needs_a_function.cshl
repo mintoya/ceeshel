@@ -2,5 +2,5 @@
 // a value that isn't a function is called through its () member
 i32 ~~ @sint();
 P ~~ @struct{ n ~i32; };
-p ~P = [0];
-p(5)
+p ~P = ([0 as i32] as P);
+p(5 as i32)

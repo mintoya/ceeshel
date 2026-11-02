@@ -1,4 +1,4 @@
 m ~~ @import @path "lib/math.cshl";
-a ~~ m.double(4);
+a ~~ m.double(4 as m.i32);
 @using(m);
-(a == 8) and (double(5) == 10) and (@typeof(a) == i32)
+(a == (8 as i32)) and (double(5 as i32) == (10 as i32)) and (@typeof(a) == i32)

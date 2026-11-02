@@ -27,12 +27,12 @@ slice ~~ [T ~type] <<fn>> type @struct{
         r ~?(T) = null;
         @if[it.at < it.of.len, {
           r = it.of:get(it.at);
-          it.at = it.at + 1;
+          it.at = it.at + (1 as u64);
         }];
         r
       };
     };
-    r ~I = [self, 0];
+    r ~I = ([self, 0 as u64] as I);
     r
   };
 };
@@ -41,7 +41,7 @@ slice ~~ [T ~type] <<fn>> type @struct{
 slice_of ~~ [a ~@refT(@any())] <<fn>> any {
   r ~slice(@membertype(@typeof(a)));
   r.ptr = (@where a) as @typeof(r.ptr);
-  r.len = @countof(@typeof(a));
+  r.len = @countof(@typeof(a)) as u64;
   r
 };
 

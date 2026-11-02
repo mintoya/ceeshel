@@ -1,24 +1,26 @@
-// a function becomes a function pointer where one is wanted, if its
-// parameters are exactly the pointer's (no specializing); calls go through
-// it, and it is a runtime value: copied, swapped, passed, kept in a struct
+// Explicitly cast functions to exact runtime signatures; pointers can be
+// copied, swapped, passed, and stored in structs.
 i32 ~~ @sint(); bool ~~ @bool(); type ~~ @type();
 add ~~ @fn[[a ~i32, b ~i32], i32, a + b];
 sub ~~ @fn[[a ~i32, b ~i32], i32, a - b];
 Op ~~ @fnptr[[i32, i32], i32];
-apply ~~ @fn[[f ~Op, x ~i32], i32, f(x, 10)];
-p ~Op = add;
+apply ~~ @fn[[f ~Op, x ~i32], i32, f(x, 10 as i32)];
+p ~Op = add as Op;
 q ~= sub as Op;
-first ~= p(1, 2);
+first ~= p(1 as i32, 2 as i32);
 t ~Op = p; p = q; q = t;
 flag ~bool = 1 == 1;
-r ~Op = add;
-@if[flag, r = sub];
+r ~Op = add as Op;
+@if[flag, r = sub as Op];
 Box ~~ @struct{ op ~Op; };
-box ~Box = [add];
-// a generic one goes through a wrapper
+box ~Box = ([add as Op] as Box);
+// A generic function goes through an explicitly typed wrapper.
 gen ~~ @fn[[T ~type, a ~T], T, a];
-id ~Op = @fn[[a ~i32, b ~i32], i32, gen(i32, a)];
-k ~@comptime(i32) = 4;
-wide ~@fnptr[[@comptime(i32), i32], @comptime(i32)] = add;
-(wide(k, 1) == 5) and (@typeof(wide) == Op) and (first == 3) and (p(5, 2) == 3) and (q(5, 2) == 7) and (apply(add, 1) == 11)
-  and (r(9, 4) == 5) and (box.op(2, 3) == 5) and (id(7, 0) == 7)
+id ~Op = (@fn[[a ~i32, b ~i32], i32, gen(i32, a)] as Op);
+k ~@comptime(i32) = 4 as i32;
+wide ~@fnptr[[@comptime(i32), i32], @comptime(i32)] = add as Op;
+(wide(k, 1 as i32) == (5 as i32)) and (@typeof(wide) == Op)
+  and (first == (3 as i32)) and (p(5 as i32, 2 as i32) == (3 as i32))
+  and (q(5 as i32, 2 as i32) == (7 as i32)) and (apply(add as Op, 1 as i32) == (11 as i32))
+  and (r(9 as i32, 4 as i32) == (5 as i32)) and (box.op(2 as i32, 3 as i32) == (5 as i32))
+  and (id(7 as i32, 0 as i32) == (7 as i32))

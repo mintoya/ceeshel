@@ -1,10 +1,10 @@
 // @typeof gives the type held, without the reference: so b ~@typeof(a)
-// is the type a refers to, and b is converted to it
+// is the type a refers to; callers explicitly convert b to that type
 i32 ~~ @sint(); u8 ~~ @uchar(); any ~~ @any();
 anyref ~~ @refT(any);
-put ~~ @fn[[a ~anyref, b ~@typeof(a)], @void(), @raw(a = b)];
-n ~i32 = 0;
-c ~u8 = 0;
-put(n, 300);
-put(c, 300);
-(n == 300) and (c == 44) and (@typeof(c) == u8)
+put ~~ @fn[[a ~anyref, b ~@typeof(a)], @void(), { @raw(a = b); }];
+n ~i32 = 0 as i32;
+c ~u8 = 0 as u8;
+put(n, 300 as i32);
+put(c, 300 as u8);
+(n == (300 as i32)) and (c == (44 as u8)) and (@typeof(c) == u8)

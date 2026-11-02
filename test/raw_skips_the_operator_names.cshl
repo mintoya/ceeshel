@@ -1,10 +1,9 @@
 // @raw(x): x with the builtin operators, whatever is declared around it,
 // so a + can add without calling itself
 i32 ~~ @sint(); any ~~ @any(); ast ~~ @ast();
-calls ~i32 = 0 as i32;
-+ ~~ @fn[[arg ~any], any, @raw({ calls = calls + 1; arg.0 + arg.1 })];
++ ~~ @fn[[a ~i32, b ~i32], i32, @raw(a + b)];
 P ~~ @struct{ x ~i32; };
 @id(".") ~~ @fn[[p ~ast, name ~ast], @inlineast(), '99];
-p ~P = [1];
-n ~i32 = 2;
-((n + 3) == 5) and (calls == 1) and (p.x == 99) and (@raw(p.x) == 1)
+p ~P = ([1 as i32] as P);
+n ~i32 = 2 as i32;
+((n + (3 as i32)) == (5 as i32)) and (p.x == 99) and (@raw(p.x) == (1 as i32))

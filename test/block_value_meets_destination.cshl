@@ -1,13 +1,13 @@
-// a block's value meets the destination: {...; [..]} builds the type
+// Aggregate construction inside a block has an explicit cast.
 @using @import @path "lib/fn.cshl";
 @using @import @path "lib/types.cshl";
 somevalue ~ @struct {
   value ~ i32;
   __add ~~ [a~@this(),b~@this()] <<fn>> @this()
-    [value ~~ (a.value + b.value)];
+    ([value ~~ (a.value + b.value)] as @this());
 };
-somevalue = [value ~~ 1];
+somevalue = ([value ~~ (1 as i32)] as @typeof(somevalue));
 somevalue = somevalue :__add somevalue;
 P ~~ @struct{ x ~i32; y ~i32; };
-p ~P = { n ~i32 = 3; [n, n + 1] };
-(somevalue.value == 2) and (p.y == 4)
+p ~P = { n ~i32 = 3 as i32; [n, n + (1 as i32)] as P };
+(somevalue.value == (2 as i32)) and (p.y == (4 as i32))

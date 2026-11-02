@@ -14,12 +14,12 @@ storage ~~ [Types ~type] <<fn>> type @raw({
   size ~int = 0;
   Big ~type = @uchar();
   i ~int = 0;
-  @cwhile[i < @countof(Types), {
+  @fn[[i ~@int()], @void(), @if[i < @countof(Types), {
     T ~~ Types.`(@fieldname(Types, i));
     @if[@sizeof(T) > size, size = @sizeof(T)];
     @if[@alignof(T) > @alignof(Big), Big = T];
-    i = i + 1;
-  }];
+    @recur[i + 1];
+  }]](i);
   @arr[(size + @sizeof(Big) - 1) / @sizeof(Big), Big]
 });
 
@@ -35,12 +35,12 @@ union_of ~~ [Types ~type] <<fn>> type @struct{
 union ~~ [args ~ast] <<fn>> inline {
   types ~ast = '{};
   i ~int = 1;
-  @cwhile[i < @len[args], {
+  @fn[[i ~@int()], @void(), @if[i < @len[args], {
     d ~~ @get[args, i];
     t ~ast = '(`(Ast.decl_name(`d)) ~~ `(Ast.decl_type(`d)));
     types = '{ ..`(@get[types, 1, @len[types]]); `t; };
-    i = i + 1;
-  }];
+    @recur[i + 1];
+  }]](i);
   '(union_of(@struct `types))
 };
 

@@ -1,3 +1,0 @@
-a ~@sint() = -1 as @sint();
-b ~@uint() = 1 as @uint();
-(@typeof(a + b) == @uint()) and ((a + b) == 0)

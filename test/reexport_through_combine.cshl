@@ -5,6 +5,6 @@ both ~~ combine[
   @import @path "lib/math.cshl"
 ];
 @using both;
-o ~?(i32) = 4;
+o ~?(i32) = 4 as i32;
 p ~?(i32) = null;
-o.present and (o.value == 4) and (p.present == (0 == 1)) and (double(3) == 6)
+o.present and (o.value == (4 as i32)) and (p.present == (0 == 1)) and (double(3 as i32) == (6 as i32))

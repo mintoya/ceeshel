@@ -2,7 +2,7 @@
 // and so do their fields
 type ~~ @type(); int ~~ @int();
 P ~~ @struct{ a ~int; t ~type; };
-p ~P = [1, @sint()];
+p ~P = ([1, @sint()] as P);
 r ~@refT(P) = p;
 r.a = 5;
 q ~~ @where(p.a);

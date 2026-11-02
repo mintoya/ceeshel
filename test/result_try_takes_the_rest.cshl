@@ -30,23 +30,23 @@ Result ~~ @fn[[T ~type], type, @struct{
   }];
 }];
 R ~~ Result(i32);
-okv ~~ @fn[[v ~i32], R, { r ~R = [1 == 1, v, 0]; r }];
-fail ~~ @fn[[e ~i32], R, { r ~R = [0 == 1, 0, e]; r }];
-half ~~ @fn[[n ~i32], R, { r ~R; @if[(n % 2) == 0, r = okv(n / 2), r = fail(n)]; r }];
+okv ~~ @fn[[v ~i32], R, { r ~R = ([1 == 1, v, 0 as i32] as R); r }];
+fail ~~ @fn[[e ~i32], R, { r ~R = ([0 == 1, 0 as i32, e] as R); r }];
+half ~~ @fn[[n ~i32], R, { r ~R; @if[(n % (2 as i32)) == (0 as i32), r = okv(n / (2 as i32)), r = fail(n)]; r }];
 // the error is what the block yields, so a defer sees it: errdefer
-cleanups ~i32 = 0;
-quarter ~~ @fn[[n ~i32], R, {
+cleanups ~i32 = 0 as i32;
+quarter ~~ @fn[[cleanups ~@refT(i32), n ~i32], R, {
   @defer @if[(@yielded()).ok == false,
-    cleanups = cleanups + 1];
+    cleanups = cleanups + (1 as i32)];
   half(n):try[h,
     half(h):try[q,
       okv(q)
   ]]
 }];
-a ~= quarter(12);
-b ~= quarter(6);
-c ~= quarter(5);
-(a.ok and (a.value == 3))
-  and ((b.ok == false) and (b.err == 3))
-  and (c.err == 5)
-  and (cleanups == 2)
+a ~= quarter(cleanups, 12 as i32);
+b ~= quarter(cleanups, 6 as i32);
+c ~= quarter(cleanups, 5 as i32);
+(a.ok and (a.value == (3 as i32)))
+  and ((b.ok == false) and (b.err == (3 as i32)))
+  and (c.err == (5 as i32))
+  and (cleanups == (2 as i32))

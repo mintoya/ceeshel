@@ -1,0 +1,4 @@
+// Element types are explicit, including literals beside runtime values.
+i32 ~~ @sint(); A ~~ @arr[2, i32];
+n ~i32 = 3 as i32;
+(@typeof([n, 4 as i32] as A) == A) and (@typeof([4 as i32, n] as A) == A)

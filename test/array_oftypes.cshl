@@ -3,5 +3,5 @@ any ~~ @any();
 arr ~~ [N~@int()] <<fn>> any
   [T~@type()] <<fn>> any
     @arr(N,T);
-ta ~arr(5) @type()~[(arr(6) @sint()),@uint(),@sint(),@schar(),@uchar()];
+ta ~arr(5) @type()~ ([(arr(6) @sint()), @uint(), @sint(), @schar(), @uchar()] as (arr(5) @type()));
 @arr(6,@sint()) == (@get[ta,0])

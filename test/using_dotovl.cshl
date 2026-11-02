@@ -2,11 +2,11 @@
 @using @import @path "lib/fn.cshl";
 any ~~ @any();
 i32 ~~ @sint();
+
 x ~ @struct{
-  __dot ~~  [self ~ @refT(@this()) , left~@ast()] <<fn>> any {
-    1 as i32
-  };
+  __dot ~~  [self ~ @refT(@this()) , left~@ast()] <<fn>> any 
+    1 as i32;
 };
 
-( x.one == 1 )
-  and (x.two == 1)
+(x.one == (1 as i32))
+  and (x.two == (1 as i32))

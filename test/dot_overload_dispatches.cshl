@@ -21,9 +21,9 @@ V ~~ @struct{
 };
 P ~~ @struct{ x ~i32; };
 
-v ~V = [3, 4];
-v.first = 10;
-p ~P = [1];
-p.x = p.x + 1;
-(v.sum == 13) and (v.a == 3) and (v.b == 10) and (V.total(v) == 13)
-  and (p.x == 2)
+v ~V = ([3 as i32, 4 as i32] as V);
+v.first = 10 as i32;
+p ~P = ([1 as i32] as P);
+p.x = p.x + (1 as i32);
+(v.sum == (13 as i32)) and (v.a == (3 as i32)) and (v.b == (10 as i32)) and (V.total(v) == (13 as i32))
+  and (p.x == (2 as i32))

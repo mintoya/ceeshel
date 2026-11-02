@@ -8,10 +8,10 @@ i32 ~~ @sint();
 fn ~~ @fn[[params ~ast, ret ~ast], inline,
   '@fn[[body ~ast], any, @fn[`(params), `(ret), \`(body)]]];
 
-([i ~i32] <<fn>> i32 7)(6) == 7;
+([i ~i32] <<fn>> i32 (7 as i32))(6 as i32) == (7 as i32);
 
-z ~~ fn[[i ~i32], i32] i * 2;
-x ~~ [i ~i32] <<fn>> i32 i * 2;
+z ~~ fn[[i ~i32], i32] i * (2 as i32);
+x ~~ [i ~i32] <<fn>> i32 i * (2 as i32);
 
-((z x 5) == 20) and
-(x[z[5]] == 20);
+((z x (5 as i32)) == (20 as i32)) and
+(x[z[5 as i32]] == (20 as i32))

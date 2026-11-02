@@ -1,2 +1,2 @@
 // error: ARRAY_COUNT
-a ~@arr[3, @sint()] = [1, 2]
+a ~@arr[3, @sint()] = ([1 as @sint(), 2 as @sint()] as @arr[3, @sint()])

@@ -1,5 +1,5 @@
 @using @import @path "combine.cshl";
-bool ~~ @bool;
+bool ~~ @bool();
 @struct {
   Ast ~~ @import @path "ast.cshl";
   struct ~~ @struct;

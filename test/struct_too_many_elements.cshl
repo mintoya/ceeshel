@@ -1,4 +1,4 @@
 // error: TOO_MANY_ELEMENTS
 i32 ~~ @sint();
 P ~~ @struct{ x ~i32; };
-p ~P ~ [1, 2]
+p ~P ~ ([1 as i32, 2 as i32] as P)

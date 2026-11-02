@@ -1,7 +1,7 @@
 // a returned reference reads as a value and assigns as a place
 i32 ~~ @sint();
 Arr ~~ @arr[3, i32];
-a ~Arr = [1, 2, 3];
+a ~Arr = ([1 as i32, 2 as i32, 3 as i32] as Arr);
 at ~~ @fn[[a ~@refT(Arr), i ~i32], @refT(i32), @ref @get[a, i]];
-at[a, 1] = 20;
-(@get[a, 1] == 20) and (at[a, 2] == 3) and ((at[a, 0] + 1) == 2)
+at[a, 1 as i32] = 20 as i32;
+(@get[a, 1] == (20 as i32)) and (at[a, 2 as i32] == (3 as i32)) and ((at[a, 0 as i32] + (1 as i32)) == (2 as i32))

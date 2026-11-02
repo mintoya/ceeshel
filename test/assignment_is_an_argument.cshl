@@ -3,6 +3,6 @@
 i32 ~~ @sint(); ast ~~ @ast(); inline ~~ @inlineast();
 x ~i32 = 0 as i32;
 twice ~~ @fn[[e ~ast], inline, '{ `e; `e }];
-f ~~ @fn[[a ~i32, b ~i32 = 1], i32, a + b];
-twice(x = x + 1);
-(x == 2) and (f(b ~~ 10, a ~~ 1) == 11) and (f(x = 7) == 8) and (x == 7)
+f ~~ @fn[[a ~i32, b ~i32 = 1 as i32], i32, a + b];
+twice(x = x + (1 as i32));
+(x == (2 as i32)) and (f(b ~~ (10 as i32), a ~~ (1 as i32)) == (11 as i32)) and (f(x = 7 as i32) == (8 as i32)) and (x == (7 as i32))

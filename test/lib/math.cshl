@@ -1,4 +1,4 @@
 // imported by import_and_using.cshl: a file's value is its last expression
 i32 ~~ @sint();
-double ~~ @fn[[x ~i32], i32, x * 2];
+double ~~ @fn[[x ~i32], i32, x * (2 as i32)];
 @struct{ double ~~ double; i32 ~~ i32; x~i32;}

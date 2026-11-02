@@ -6,10 +6,10 @@ fn ~~ @fn[[params ~ast, ret ~ast], inline,
 somevalue ~ @struct {
   value ~ i32;
   __add ~~ [a~@this(),b~@this()] <<fn>> @this()
-    [value ~~ (a.value + b.value)];
+    ([value ~~ (a.value + b.value)] as @this());
 };
-somevalue = [value ~~ 1];
+somevalue = ([value ~~ (1 as i32)] as @typeof(somevalue));
 somevalue = somevalue :__add somevalue;
 P ~~ @struct{ x ~i32; y ~i32; };
 sum ~~ @fn[[p ~P], i32, p.x + p.y];
-(somevalue.value == 2) and ((sum [1, 2]) == 3)
+(somevalue.value == (2 as i32)) and ((sum ([1 as i32, 2 as i32] as P)) == (3 as i32))

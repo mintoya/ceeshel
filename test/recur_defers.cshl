@@ -1,0 +1,12 @@
+// On restart, defers observe void; on completion they observe the result.
+i32 ~~ @sint();
+count ~~ @fn[[n ~i32, log ~@refT(i32)], i32, {
+  @defer @if[@typeof(@yielded()) == @void(),
+    log = log + (1 as i32),
+    log = log + (10 as i32)];
+  @if[n > (0 as i32), @recur[n - (1 as i32), log]];
+  n
+}];
+log ~i32 = 0 as i32;
+r ~~ count(3 as i32, log);
+(r == (0 as i32)) and (log == (13 as i32))

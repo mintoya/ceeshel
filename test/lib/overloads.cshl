@@ -18,15 +18,23 @@
       target = value]];
   target
 });
-@id("as") ~~ [value ~any, T ~type] <<fn>> T @raw({
-  r ~T;
-  @if[@compiles(value:__as(T)),
-    r = value:__as(T),
-    @if[@compiles(r:__set(value)),
-      r:__set(value),
-      r = value as T]];
-  r
-});
+@id("as") ~~ [value ~ast, T ~ast] <<fn>> inline {
+  v ~~ @gensym(value);
+  t ~~ @gensym(target);
+  r ~~ @gensym(result);
+  result ~ast = '((@fn[[`v ~@any(), `t ~@type()], `t, @raw({
+      `r ~`t;
+      @if[@compiles((`v):__as(`t)),
+        `r = (`v):__as(`t),
+        @if[@compiles((`r):__set(`v)),
+          (`r):__set(`v),
+          `r = `v as `t]];
+      `r
+    })])[`value, `T]);
+  @if[@ast_stringeq(@get[value, 0], "[]"),
+    result = '((@raw(`@id("as")))[`value, `T])];
+  result
+};
 
 @struct {
   `@id(".") ~~ `@id(".");

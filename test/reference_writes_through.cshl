@@ -2,6 +2,6 @@
 i32 ~~ @sint();
 x ~i32 = 5 as i32;
 r ~@refT(i32) = x;
-r = 67;
-r = r + 1;
-x == 68
+r = 67 as i32;
+r = r + (1 as i32);
+x == (68 as i32)

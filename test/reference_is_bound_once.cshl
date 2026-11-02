@@ -11,5 +11,5 @@ either ~~ @fn[[c ~bool, a ~@refT(i32), b ~@refT(i32)], @refT(i32), {
   @at p
 }];
 flag ~bool = 1 == 1;
-either(flag, x, y) = 9;
-(x == 2) and (y == 9)
+either(flag, x, y) = 9 as i32;
+(x == (2 as i32)) and (y == (9 as i32))

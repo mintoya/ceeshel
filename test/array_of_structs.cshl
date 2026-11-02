@@ -1,5 +1,5 @@
 i32 ~~ @sint();
 P ~~ @struct{ x ~i32; y ~i32; };
-ps ~@arr[2, P] = [[1, 2], [3, 4]];
-@get[ps, 0].x = 7;
-(@get[ps, 1].y == 4) and (@get[ps, 0].x == 7)
+ps ~@arr[2, P] = ([([1 as i32, 2 as i32] as P), ([3 as i32, 4 as i32] as P)] as @arr[2, P]);
+@get[ps, 0].x = 7 as i32;
+(@get[ps, 1].y == (4 as i32)) and (@get[ps, 0].x == (7 as i32))

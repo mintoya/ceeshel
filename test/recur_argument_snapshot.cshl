@@ -1,0 +1,7 @@
+// Arguments are captured before defers execute or parameters are rebound.
+i32 ~~ @sint();
+swap ~~ @fn[[n ~i32, a ~i32, b ~i32], i32, {
+  @if[n > (0 as i32), @recur[n - (1 as i32), b, a]];
+  a
+}];
+swap(10001 as i32, 2 as i32, 7 as i32) == (7 as i32)

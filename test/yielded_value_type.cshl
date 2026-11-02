@@ -1,0 +1,5 @@
+// A defer observes the type of the value yielded by its block.
+i32 ~~ @sint();
+seen ~i32 = 0 as i32;
+y ~~ { @defer(@if[@typeof(@yielded()) == i32, seen = seen + (10 as i32)]); x ~i32 = 4 as i32; x };
+(seen == (10 as i32)) and (y == (4 as i32))

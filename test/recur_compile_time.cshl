@@ -1,0 +1,8 @@
+// Compile-time iteration uses the same restart operation.
+steps ~= 0;
+sum ~~ @fn[[n ~@int(), total ~@int()], @int(), {
+  @defer(steps = steps + 1);
+  @if[n > 0, @recur[n - 1, total + n]];
+  total
+}];
+(sum(100, 0) == 5050) and (steps == 101)

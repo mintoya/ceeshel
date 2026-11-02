@@ -5,4 +5,4 @@ outer ~~ @fn[[x ~i32], i32, {
   inner ~~ @fn[[], i32, y];
   inner()
 }];
-outer(1)
+outer(1 as i32)

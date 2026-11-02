@@ -1,6 +1,6 @@
 i32 ~~ @sint();
-inc ~~ @fn[[x ~@refT(i32)], @void(), { x = x + 1; }];
-v ~i32 = 1;
+inc ~~ @fn[[x ~@refT(i32)], @void(), { x = x + (1 as i32); }];
+v ~i32 = 1 as i32;
 inc[v];
 inc(v);
-v == 3
+v == (3 as i32)

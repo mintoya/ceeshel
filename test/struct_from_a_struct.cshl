@@ -15,8 +15,8 @@ Ptrs ~~ @fn[[T ~type], type, {
 }];
 P ~~ @struct{ a ~i32; b ~u8; };
 Q ~~ Ptrs(P);
-p ~P = [1, 2];
-q ~Q = [@where p.a, @where p.b];
-@at q.a = 10;
+p ~P = ([1 as i32, 2 as u8] as P);
+q ~Q = ([@where p.a, @where p.b] as Q);
+@at q.a = 10 as i32;
 (@countof(Q) == 2) and (@fieldtype(Q, 1) == @ptr(u8))
-  and @ast_stringeq(@fieldname(Q, 0), "a") and (p.a == 10) and ((@at q.b) == 2)
+  and @ast_stringeq(@fieldname(Q, 0), "a") and (p.a == (10 as i32)) and ((@at q.b) == (2 as u8))

@@ -1,11 +1,11 @@
 // @refT(@any()): a reference to a place of any type; compile-time
 // variables are places too
 i32 ~~ @sint(); any ~~ @any();
-bump ~~ @fn[[x ~@refT(any)], @void(), x = x + 1];
-n ~i32 = 1;
+bump ~~ @fn[[x ~@refT(any)], @void(), { x = x + (1 as @typeof(x)); }];
+n ~i32 = 1 as i32;
 bump(n);
 bump(n);
 c ~= 0;
 bump(c);
 bump(c);
-(n == 3) and (c == 2)
+(n == (3 as i32)) and (c == 2)

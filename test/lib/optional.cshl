@@ -4,7 +4,7 @@
 type ~~ @type(); bool ~~ @bool(); ast ~~ @ast(); any ~~ @any(); void ~~ @void();
 inline ~~ @inlineast();
 Null ~~ @struct{ unit ~@int(); };
-null ~Null ~ [0];
+null ~Null ~ ([0] as Null);
 ? ~~ @fn[[T ~type], type, @struct{
   Self ~~ @this();
   present ~bool;
@@ -33,15 +33,24 @@ null ~Null ~ [0];
 @id("=") ~~ @fn[[target ~@refT(any), value ~any], @void(),
   @raw(@if[@compiles(target:__set(value)), target:__set(value), target = value])];
 // v as T builds a T through T's __set, or else v's __as, when that compiles
-@id("as") ~~ @fn[[value ~any, T ~type], T, @raw({
-  r ~T;
-  @if[@compiles(r:__set(value)),
-    r:__set(value),
-    @if[@compiles(value:__as(T)),
-      r = value:__as(T),
-      r = value as T]];
-  r
-})];
+@id("as") ~~ @fn[[value ~ast, T ~ast], inline, {
+  v ~~ @gensym(value);
+  t ~~ @gensym(target);
+  r ~~ @gensym(result);
+  result ~ast = '((@fn[[`v ~@any(), `t ~@type()], `t, @raw({
+      `r ~`t;
+      @if[@compiles((`r):__set(`v)),
+        (`r):__set(`v),
+        @if[@compiles((`v):__as(`t)),
+          `r = (`v):__as(`t),
+          `r = `v as `t]];
+      `r
+    })])[`value, `T]);
+  @if[@ast_stringeq(@get[value, 0], "[]"),
+    result = '((@raw(`@id("as")))[`value, `T])];
+  result
+}];
+
 @struct{
   ? ~~ ?;
   null ~~ null;

@@ -1,0 +1,9 @@
+// The library as handles aggregate syntax without suppressing element overloads.
+@using @import @path "lib/optional.cshl";
+i32 ~~ @sint();
+P ~~ @struct{ x ~i32; };
+k ~@comptime(i32) = 3 as i32;
++ ~~ @fn[[a ~i32, b ~i32], i32, @raw(42 as i32)];
+n ~i32 = 0 as i32;
+p ~P = [{ @raw(n = n + (1 as i32)); (1 as i32) + (2 as i32) }] as P;
+(p.x == (42 as i32)) and (n == (1 as i32)) and @iscomptime(k)

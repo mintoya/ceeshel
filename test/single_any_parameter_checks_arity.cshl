@@ -1,0 +1,4 @@
+// error: ARG_COUNT
+// A single any parameter still accepts exactly one argument.
+count ~~ @fn[[xs ~@any()], @int(), @len[xs]];
+count[1, 2, 3]

@@ -11,4 +11,4 @@ c ~~ combine[combine[a,b],@struct{
 (@countof(c) == 3)
   and ( c.one == 1 )
   and ( c.two == 2 )
-  and ( c.three() == 3 );
+  and ( c.three() == 3 )

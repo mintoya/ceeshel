@@ -1,3 +1,3 @@
 i32 ~~ @sint();
-inc ~~ @fn[[a ~i32], i32, a + 1];
-(inc(1) == 2) and ((inc 1) == 2) and (inc[1] == 2)
+inc ~~ @fn[[a ~i32], i32, a + (1 as i32)];
+(inc(1 as i32) == (2 as i32)) and ((inc (1 as i32)) == (2 as i32)) and (inc[1 as i32] == (2 as i32))

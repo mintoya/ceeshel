@@ -1,6 +1,6 @@
 // arrays are values: assigning copies
 i32 ~~ @sint();
-a ~@arr[2, i32] = [1, 2];
+a ~@arr[2, i32] = ([1 as i32, 2 as i32] as @arr[2, i32]);
 b ~@arr[2, i32] = a;
-@get[b, 0] = 9;
-(@get[a, 0] == 1) and (@get[b, 0] == 9)
+@get[b, 0] = 9 as i32;
+(@get[a, 0] == (1 as i32)) and (@get[b, 0] == (9 as i32))

@@ -2,5 +2,5 @@
 i32 ~~ @sint();
 x ~i32 = 1 as i32;
 p ~@ptr(i32) = @where(x);
-@at(p) = 5;
-(x == 5) and (@at(p) == 5) and (p == @where(x))
+@at(p) = 5 as i32;
+(x == (5 as i32)) and (@at(p) == (5 as i32)) and (p == @where(x))
