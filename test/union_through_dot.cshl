@@ -1,7 +1,7 @@
 // a library union: one storage, u.name reads and writes it as that member
 @using @import @path "lib/union.cshl";
 i32 ~~ @sint(); u8 ~~ @uchar();
-U ~~ union[a ~i32, b ~@arr[4, u8]];
+U ~~ union([a ~i32, b ~@arr[4, u8]]);
 u ~U;
 u.a = 258 as i32;
 first ~= @get[u.b, 0];

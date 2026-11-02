@@ -1,9 +1,10 @@
 @using @import @path "lib/meta.cshl";
 
-six ~i32 = 6;
-seven ~i32 = 7;
+six ~i32 = 6 as i32;
+seven ~i32 = 7 as i32;
 
-([i ~i32] <<closure [seven,six]>> i32 
-  (seven = seven + i + six))(8) == seven;
+f ~= ([i ~i32] <<closure [seven,six]>> i32
+  (seven = seven + i + six));
+f(8 as i32) == seven
 
 

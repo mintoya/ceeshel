@@ -15,7 +15,7 @@ Result ~~ @fn[[T ~type], type, @struct{
     '{
       `t ~= `this;
       `out ~@typeof(`t);
-      @if[(`t).ok, { `name ~= (`t).value; `out = `rest; }, `out = `t];
+      @if[(`t).ok, { `name ~= (`t).value; `out = `rest }, `out = `t];
       `out
     }
   }];

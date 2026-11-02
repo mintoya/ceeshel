@@ -7,17 +7,17 @@ sum_to ~~ [n ~i32] <<fn>> @struct{
   sum~i32;
   count~i32;
 } {
-  result ~@returntype()= [0,0];
-  range(0 as i32, n) 
-    |> map _ * k
-    |> filter (_ % 3) == 0
-    |> until _ > 14 
-    |> each {
-      result.sum = result.sum + _;
-      result.count = result.count + 1;
+  result ~@returntype() = ([0 as i32, 0 as i32] as @returntype());
+  range(0 as i32, n)
+    |> map _ * (k as i32)
+    |> filter (_ % (3 as i32)) == (0 as i32)
+    |> until _ > (14 as i32)
+    |> each [value ~i32] <<closure [result]>> void {
+      result.sum = result.sum + value;
+      result.count = result.count + (1 as i32);
     };
   result
 };
-sum_to(10) |> 
-  (_.sum == 18) 
-    and (_.count == 3)
+sum_to(10 as i32) |>
+  (_.sum == (18 as i32))
+    and (_.count == (3 as i32))

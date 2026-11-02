@@ -18,13 +18,7 @@ decl_type ~~ @fn[[x ~ast], ast, {
   r
 }];
 
-decl_value ~~ @fn[[x ~ast], ast, {
-  r ~ast;
-  @if[is[`x, "~"],
-    {},
-    r = @get[x, @len[x] - 1]];
-  r
-}];
+decl_value ~~ @fn[[x ~ast], ast, @get[x, 3]];
 
 prepend ~~ @fn[[a ~ast,x ~ast],ast,{
   items[`('[`a,..`x])]

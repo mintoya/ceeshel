@@ -9,7 +9,7 @@ c ~? i32= b;
 d ~? i32= 7 as i32;
 calls ~i32 = 0 as i32;
 anyref ~~ @refT(@any());
-fallback ~~ @fn[[], i32, { calls = calls + (1 as i32); 9 as i32 }];
+fallback ~~ @fn[[calls ~@refT(i32)], i32, { calls = calls + (1 as i32); 9 as i32 }];
 (a.present == (0 == 1)) and b.present and (b.value == (5 as i32))
   and (c.value == (5 as i32)) and (d.value == (7 as i32))
-  and (a:orelse(fallback()) == (9 as i32)) and (b:orelse(fallback()) == (5 as i32)) and (calls == (1 as i32))
+  and (a:orelse(fallback(calls)) == (9 as i32)) and (b:orelse(fallback(calls)) == (5 as i32)) and (calls == (1 as i32))

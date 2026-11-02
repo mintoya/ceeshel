@@ -2,7 +2,7 @@
 
 if ~~ [a ~ast] <<fn>> inline {
   cnd ~~ @get[a,0];
-  @if[not ast_stringeq(@get[@get[a,1],0] , "[]"),
+  @if[not @ast_stringeq(@get[@get[a,1],0] , "[]"),
     @compileError "expected a block"];
   arm ~~ Ast.items[`(@get[a,1])];
   then ~~ @get[arm,0];
@@ -10,11 +10,11 @@ if ~~ [a ~ast] <<fn>> inline {
   '@if[`cnd,`then,`else]
 };
 
-(if true 
-  (true,false)) 
-and (if false 
-  (false,true))
-and (if false 
-  (false,
-  if true 
-    (true,false)))
+(if true
+  [true,false])
+and (if false
+  [false,true])
+and (if false
+  [false,
+  if true
+    [true,false]])

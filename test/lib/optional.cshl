@@ -1,6 +1,7 @@
 // cshl's ? from examples/module.cshl. ?(T) holds a T or nothing: a T
 // assigned to it is present, null is absent, another ?(T) is copied. The =
 // here sends x = v (and x ~T = v) to x's __set when that compiles.
+@using @import @path "overloads.cshl";
 type ~~ @type(); bool ~~ @bool(); ast ~~ @ast(); any ~~ @any(); void ~~ @void();
 inline ~~ @inlineast();
 Null ~~ @struct{ unit ~@int(); };
@@ -30,31 +31,10 @@ null ~Null ~ ([0] as Null);
     }
   }];
 }];
-@id("=") ~~ @fn[[target ~@refT(any), value ~any], @void(),
-  @raw(@if[@compiles(target:__set(value)), target:__set(value), target = value])];
-// v as T builds a T through T's __set, or else v's __as, when that compiles
-@id("as") ~~ @fn[[value ~ast, T ~ast], inline, {
-  v ~~ @gensym(value);
-  t ~~ @gensym(target);
-  r ~~ @gensym(result);
-  result ~ast = '((@fn[[`v ~@any(), `t ~@type()], `t, @raw({
-      `r ~`t;
-      @if[@compiles((`r):__set(`v)),
-        (`r):__set(`v),
-        @if[@compiles((`v):__as(`t)),
-          `r = (`v):__as(`t),
-          `r = `v as `t]];
-      `r
-    })])[`value, `T]);
-  @if[@ast_stringeq(@get[value, 0], "[]"),
-    result = '((@raw(`@id("as")))[`value, `T])];
-  result
-}];
+@using @import @path "combine.cshl";
 
-@struct{
-  ? ~~ ?;
-  null ~~ null;
-  Null ~~ Null;
-  @id("=") ~~ `(@id("="));
-  @id("as") ~~ `(@id("as"));
-}
+combine[@struct{
+    ? ~~ ?;
+    null ~~ null;
+    Null ~~ Null;
+}, @import @path "overloads.cshl" ]

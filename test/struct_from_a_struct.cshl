@@ -1,17 +1,15 @@
-// a struct built from another: Ptrs(T) has a pointer for each of T's fields,
-// same names. The fields are collected as an AST, then `(...) lowers it here,
-// where x is in scope for @typeof
+// Build a pointer field for each source field using compile-time recurrence.
 i32 ~~ @sint(); u8 ~~ @uint(); int ~~ @int(); ast ~~ @ast(); type ~~ @type();
 Ptrs ~~ @fn[[T ~type], type, {
-  x ~T;
-  fields ~ast = '{};
-  i ~int = 0;
-  @cwhile[i < @countof(T), {
-    name ~~ @fieldname(T, i);
-    fields = '{ ..`(@get[fields, 1, @len[fields]]); `name ~@ptr(@typeof(x.`name)); };
-    i = i + 1;
-  }];
-  `('@struct(`fields))
+  x ~@comptime(T);
+  fields ~~ @fn[[i ~int, fields ~ast], ast, {
+    @if[i < @countof(T), {
+      name ~~ @fieldname(T, i);
+      @recur[i + 1, `('{ ..`(@get[fields, 1, @len[fields]]); `name ~@ptr(@typeof(x.`name)); })];
+    }];
+    fields
+  }](0, {});
+  @struct `fields
 }];
 P ~~ @struct{ a ~i32; b ~u8; };
 Q ~~ Ptrs(P);

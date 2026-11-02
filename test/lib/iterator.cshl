@@ -1,38 +1,31 @@
-// cshl's iterator.cshl. An iterator is a value with next(), giving a ?(T):
-// present until it runs out. The adapters are written after |>, where _ is
-// the iterator before them: range(0, 5) |> map(_ * 2) |> each(sum = sum + _)
+// Iterators are values whose next method returns an optional value.
 @using @import @path "types.cshl";
 @using @import @path "fn.cshl";
 @using @import @path "optional.cshl";
 
-// start, start + 1, ... up to end, not including it
 range ~~ [start ~any, end ~@typeof(start)] <<fn>> any {
+  T ~~ @typeof(start);
   R ~~ @struct{
     Self ~~ @this();
-    at ~@typeof(start);
-    end ~@typeof(start);
-    next ~~ [self ~@refT(Self)] <<fn>> ?(@typeof(start)) {
-      r ~?(@typeof(start)) = null;
+    at ~T;
+    end ~T;
+    next ~~ [self ~@refT(Self)] <<fn>> ?(T) {
+      r ~?(T) = null;
       @if[self.at < self.end, {
         r = self.at;
-        self.at = self.at + 1;
+        self.at = self.at + (1 as T);
       }];
       r
     };
   };
-  r ~R = [start, end];
-  r
+  [start, end] as R
 };
 
-// An adapter expands to a call of its _on function with the body made a
-// function of _, where the adapter is written: the body sees the caller's
-// compile-time names, and the iterator is built here, with this file's names.
-
-// each value as f gives it
 map_on ~~ [inner ~any, f ~any] <<fn>> any {
+  Inner ~~ @typeof(inner);
   M ~~ @struct{
     Self ~~ @this();
-    inner ~@typeof(inner);
+    inner ~Inner;
     next ~~ [self ~@refT(Self)] <<fn>> any {
       x ~= self.inner:next();
       r ~?(@typeof(f(x.value))) = null;
@@ -40,59 +33,55 @@ map_on ~~ [inner ~any, f ~any] <<fn>> any {
       r
     };
   };
-  r ~M = [inner];
-  r
+  [inner] as M
 };
 map ~~ [body ~ast] <<fn>> inline '(map_on(_, @fn[[_ ~@any()], @any(), `body]));
 
-// the values f holds for
 filter_on ~~ [inner ~any, f ~any] <<fn>> any {
+  Inner ~~ @typeof(inner);
   M ~~ @struct{
     Self ~~ @this();
-    inner ~@typeof(inner);
-    next ~~ [self ~@refT(Self)] <<fn>> any {
+    inner ~Inner;
+    next ~~ [self ~@refT(Self)] <<fn>> @typeof((@fn[[it ~@refT(Inner)], @any(), it:next()])(self.inner)) {
       x ~= self.inner:next();
-      @loop{
-        @if[x.present, @if[f(x.value), @break()], @break()];
-        x = self.inner:next();
-      };
+      @if[x.present, @if[f(x.value) == (0 == 1), @recur[self]]];
       x
     };
   };
-  r ~M = [inner];
-  r
+  [inner] as M
 };
-filter ~~ [body ~ast] <<fn>> inline '(filter_on(_, @fn[[_ ~@any()], @any(), `body]));
+filter ~~ [body ~ast] <<fn>> inline '(filter_on(_, @fn[[_ ~@any()], @bool(), `body]));
 
-// the values before the first f holds for
 until_on ~~ [inner ~any, f ~any] <<fn>> any {
+  Inner ~~ @typeof(inner);
   M ~~ @struct{
     Self ~~ @this();
-    inner ~@typeof(inner);
+    inner ~Inner;
+    done ~bool;
     next ~~ [self ~@refT(Self)] <<fn>> any {
-      x ~= self.inner:next();
-      @if[x.present, @if[f(x.value), x = null]];
+      x ~@typeof(self.inner:next()) = null;
+      @if[self.done == (0 == 1), {
+        x = self.inner:next();
+        @if[x.present, @if[f(x.value), { self.done = 0 == 0; x = null; }]];
+      }];
       x
     };
   };
-  r ~M = [inner];
-  r
+  [inner, 0 == 1] as M
 };
-until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @any(), `body]));
+until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @bool(), `body]));
 
-// body for each value, as _, where each is written, so it can change the
-// caller's variables
-each ~~ [body ~ast] <<fn>> inline {
-  it ~~ @gensym(it);
-  x ~~ @gensym(x);
-  '{
-    `it ~= _;
-    @loop{
-      `x ~= (`it):next();
-      @if[(`x).present, (`x).value |> `body, @break()];
-    };
-  }
+// Explicit closure objects carry caller state; each itself captures nothing.
+each_on ~~ [inner ~any, f ~any] <<fn>> void {
+  it ~@typeof(inner) = inner;
+  callback ~@typeof(f) = f;
+  x ~= it:next();
+  @if[x.present, {
+    callback(x.value);
+    @recur[it, callback];
+  }];
 };
+each ~~ [callback ~ast] <<fn>> inline '(each_on(_, `callback));
 
 @struct{
   range ~~ range;
@@ -103,4 +92,5 @@ each ~~ [body ~ast] <<fn>> inline {
   until ~~ until;
   until_on ~~ until_on;
   each ~~ each;
+  each_on ~~ each_on;
 }

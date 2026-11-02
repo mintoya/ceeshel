@@ -1,34 +1,50 @@
 Ast ~~ @import @path "ast.cshl";
-closure_name_of ~~ @fn[[x ~@ast()],@ast(),
-  @if[Ast.is_decl(`x), Ast.decl_name(`x), x]];
-closure_value_of ~~ @fn[[x ~@ast()],@ast(),
-  @if[Ast.is_decl(`x),Ast.decl_value(`x),x]];
-closure_type_of ~~ @fn[[x ~@ast()],@ast(),
-  @if[Ast.is_decl(`x),
-    @if[Ast.decl_type(`x),
-      Ast.decl_type(`x),
-      '@typeof(`(Ast.decl_value(`x)))],
-    '@refT(@typeof(`x))]];
+closure_name_of ~~ @fn[[x ~@ast()], @ast(), {
+  result ~@ast() = x;
+  @if[Ast.is_decl(`x), result = Ast.decl_name(`x)];
+  result
+}];
+closure_value_of ~~ @fn[[x ~@ast()], @ast(), {
+  result ~@ast() = '@where(`x);
+  @if[Ast.is_decl(`x), result = Ast.decl_value(`x)];
+  result
+}];
+closure_type_of ~~ @fn[[x ~@ast()], @ast(), {
+  result ~@ast() = '@ptr(@typeof(`x));
+  @if[Ast.is_decl(`x), {
+    result = Ast.decl_type(`x);
+    @if[@len[result] == 0, result = '@typeof(`(Ast.decl_value(`x)))];
+  }];
+  result
+}];
+closure_field ~~ @fn[[x ~@ast()], @ast(), '(`(closure_name_of `x) ~ `(closure_type_of `x))];
+closure_bind ~~ @fn[[x ~@ast()], @ast(), {
+  name ~~ closure_name_of(`x);
+  result ~@ast() = '(`name ~@refT(@typeof(@at(self.`name))) = @at(self.`name));
+  @if[Ast.is_decl(`x), result = '(`name ~= self.`name)];
+  result
+}];
 
-closure_field ~~ @fn[[x ~@ast()],@ast(),'(`(closure_name_of `x) ~ `(closure_type_of `x))];
-closure_bind ~~ @fn[[x ~@ast()],@ast(),'(`(closure_name_of `x) ~= self.`(closure_name_of `x))];
-
-_closure ~~ @fn[[caps ~@ast(), params ~@ast(), ret ~@ast()],@inlineast(),{
+_closure_body ~~ @fn[[caps ~@ast(), params ~@ast(), ret ~@ast(), body ~@ast()], @inlineast(), {
   C ~~ @gensym(C);
   Self ~~ @gensym(Self);
-  '@fn[[body ~@ast()],@any(),{
+  '{
     `C ~~ @struct{
       `Self ~~ @this();
       ..`(@apply[closure_field, Ast.items(`caps)]);
       @id("()") ~~ @fn[[self ~@refT(`Self), ..`(Ast.items(`params))], `ret, {
         ..`(@apply[closure_bind, Ast.items(`caps)]);
-        \`body
+        `body
       }];
     };
-    result ~`C = [..`(@apply[closure_value_of, Ast.items(`caps)])];
+    result ~`C = ([..`(@apply[closure_value_of, Ast.items(`caps)])] as `C);
     result
-  }]
+  }
 }];
+
+_closure ~~ @fn[[caps ~@ast(), params ~@ast(), ret ~@ast()], @inlineast(),
+  '(@fn[[body ~@ast()], @inlineast(),
+    '(_closure_body[`caps, `params, `ret, \`body])])];
 
 closure ~~ @fn[[caps ~@ast()],@inlineast(),
   '(@fn[[params ~@ast(), ret ~@ast()], @inlineast(),
@@ -37,4 +53,5 @@ closure ~~ @fn[[caps ~@ast()],@inlineast(),
 @struct {
   closure ~~ closure;
   _closure ~~ _closure;
+  _closure_body ~~ _closure_body;
 }

@@ -1,39 +1,37 @@
 @using @import @path "fn.cshl";
 @using @import @path "types.cshl";
 Ast ~~ @import @path "ast.cshl";
-match_r ~~ [src ~ast,a ~ast] <<fn>> ast { 
-  curr ~~ @get[a,0];
-  rest ~~ @get[a,1,@len(a)];
-  @if[@ast_stringeq[(@get[curr,0]),"|>"] == (0==1) ,
-    @compileError("expexted |> in match arm")];
-  iselse ~~ @ast_stringeq[(@get[curr,1]) , "else"];
-
-  pick ~~ [c ~@comptime(bool), yes ~ast, no ~ast] <<fn>> ast 
-    @if[c,yes,no];
-  `(pick[
-    (@len(a) != 1) and (iselse),
-    match_r[`src , `(Ast.append[`curr,`rest])],
-    `(pick[(@len(a) == 1) and (iselse), '(`(@get[curr,2])),
-    `(pick[@len(a) != 0, '{
-          @if[`src == `(@get[curr,1]),
-            `(@get[curr,2]),
-            `(match_r[`src , `rest])
-          ]
-    },'{}])])
-  ]);
-};
-match_ast ~~ [a~ast] <<fn>> ast {
+match_ast ~~ [a ~ast] <<fn>> ast {
+  @if[@len(a) != 2, @compileError("expected match(item, [arms])")];
+  list ~~ @get[a, 1];
+  @if[@ast_stringeq(@get[list, 0], "[]") == (0 == 1), @compileError("expected [] block")];
   src ~~ @gensym(src);
-  @if[@len(a) != 2 ,
-    @compileError("expected match(item,[arm,...])")];
-  @if[@ast_stringeq(@get[@get[a,1],0],"[]") == (0 == 1),
-    @compileError("expected [] block")];
-  '{
-    `src ~~ `@get[a, 0];
-    `(match_r[`src , `(Ast.items[`(@get[a,1])])])
-  }
+  fallback ~ast = '@compileError("match needs an else arm");
+  @fn[[i ~int], void, @if[i < @len(list), {
+    arm ~~ @get[list, i];
+    @if[@ast_stringeq(@get[arm, 0], "|>") == (0 == 1), @compileError("expected |> in match arm")];
+    @if[@ast_stringeq(@get[arm, 1], "else"), fallback = @get[arm, 2]];
+    @recur[i + 1];
+  }]](1);
+  body ~~ @fn[[i ~int, rest ~ast], ast, {
+    @if[i > 0, {
+      arm ~~ @get[list, i];
+      next ~ast = rest;
+      @if[@ast_stringeq(@get[arm, 1], "else") == (0 == 1), {
+        out ~~ @gensym(result);
+        next = '{
+          `out ~@typeof(`fallback);
+          @if[`src == `(@get[arm, 1]), `out = `(@get[arm, 2]), `out = `rest];
+          `out
+        };
+      }];
+      @recur[i - 1, `next];
+    }];
+    rest
+  }](@len(list) - 1, `fallback);
+  '{ `src ~~ `(@get[a, 0]); `body }
 };
 @struct{
   match_ast ~~ match_ast;
-  match ~~ [a~ast] <<fn>> inline match_ast[`a];
+  match ~~ [a ~ast] <<fn>> inline match_ast[`a];
 }

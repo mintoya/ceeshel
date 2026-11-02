@@ -1,21 +1,18 @@
-@using @import @path "lib/meta.cshl";
-
-memstr ~~ [a ~any] <<fn>> any {
-  size    ~~ @sizeof(a);
-  result  ~~ (arr size) i8;
-  ptr     ~= (@where a) as result;
-  @at ptr
-};
-memeq ~~ [a ~any, b ~@typeof(a)] <<fn>> bool {
-  i ~int= 0;
-  res ~bool= true;
-  @loop{
-    @if[i >= @countof(a),@break()];
-    res = (@get[a,i] == @get[b,i]);
-    @if[not(res),@break()];
-    i = i + 1;
-  };
-  res
-};
-
-memeq[memstr[i8],memstr[i8]]
+// Compare explicitly referenced storage as bytes without returning local storage.
+@using @import @path "lib/types.cshl";
+memeq ~~ @fn[[a ~@refT(any), b ~@refT(@typeof(a)), i ~u64 = 0 as u64], bool, {
+  result ~bool = 1 == 1;
+  @if[i < (@sizeof(@typeof(a)) as u64), {
+    pa ~~ (@where a) as @ptr(@arr[0, u8]);
+    pb ~~ (@where b) as @ptr(@arr[0, u8]);
+    result = @get[@at(pa), i] == @get[@at(pb), i];
+    @if[result, @recur[a, b, i + (1 as u64)]];
+  }];
+  result
+}];
+A ~~ @arr[2, u8];
+a ~A = ([1 as u8, 2 as u8] as A);
+b ~A = ([1 as u8, 2 as u8] as A);
+equal ~= memeq(a, b);
+@get[b, 1] = 3 as u8;
+equal and (memeq(a, b) == (0 == 1))

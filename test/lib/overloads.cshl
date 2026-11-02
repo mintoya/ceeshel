@@ -13,9 +13,11 @@
 @id("=") ~~ [target ~anyref, value ~any] <<fn>> @refT(@typeof(target)) @raw({
   @if[@compiles(target:__set(value)),
     target:__set(value),
-    @if[@compiles(value:__as(@typeof(target))),
-      target = value:__as(@typeof(target)),
-      target = value]];
+    @if[@typeof(target) == @typeof(value),
+      target = value,
+      @if[@compiles(value:__as(@typeof(target))),
+        target = value:__as(@typeof(target)),
+        target = value]]];
   target
 });
 @id("as") ~~ [value ~ast, T ~ast] <<fn>> inline {
