@@ -21,6 +21,25 @@ range ~~ [start ~any, end ~@typeof(start)] <<fn>> any {
   [start, end] as R
 };
 
+struct_fields ~~ [T ~type] <<fn>> any ([] as @struct{
+  Self ~~ @this();
+  at ~int= 0;
+
+  next ~~ [self ~@refT(Self)] <<fn>> ?(type) {
+    @if[self.at >= @countof(T),
+      null as (?(type)),
+      {
+        field ~~ @struct {
+          name ~~ @fieldname(T, self.at);
+          type ~~ @fieldtype(T, self.at);
+          val  ~~ @fieldval(T, self.at);
+        };
+        self.at = self.at + 1;
+        field as (? type)
+      }]
+  };
+});
+
 map_on ~~ [inner ~any, f ~any] <<fn>> any {
   Inner ~~ @typeof(inner);
   M ~~ @struct{
@@ -71,7 +90,6 @@ until_on ~~ [inner ~any, f ~any] <<fn>> any {
 };
 until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @bool(), `body]));
 
-// Explicit closure objects carry caller state; each itself captures nothing.
 each_on ~~ [inner ~any, f ~any] <<fn>> void {
   it ~@typeof(inner) = inner;
   callback ~@typeof(f) = f;
@@ -93,4 +111,5 @@ each ~~ [callback ~ast] <<fn>> inline '(each_on(_, `callback));
   until_on ~~ until_on;
   each ~~ each;
   each_on ~~ each_on;
+  struct_fields ~~ struct_fields;
 }

@@ -1,0 +1,28 @@
+@using @import @path "lib/iterator.cshl";
+@using @import @path "lib/fn.cshl";
+@using @import @path "lib/types.cshl";
+
+x ~int= 0;
+
+struct_fields( @struct {
+  i ~int~ 2;
+  j ~int~ 5;
+  k ~int~ 8;
+  l ~int~ 3;
+}) |> each [t ~@type()] <<fn>> void {
+  @log t.name;
+  @log t.type;
+  @log t.val;
+  x = x + t.val;
+};
+
+struct_fields(
+  @import @path "lib/iterator.cshl"
+) |> each [t ~@type()] <<fn>> void {
+  @log t.name;
+  @log t.type;
+  @log t.val;
+};
+
+
+x == (2 + 5 + 8 + 3)
