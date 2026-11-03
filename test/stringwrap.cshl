@@ -1,14 +1,12 @@
 // Compare explicitly referenced storage as bytes without returning local storage.
 @using @import @path "lib/types.cshl";
-memeq ~~ @fn[[a ~@refT(any), b ~@refT(@typeof(a)), i ~u64 = 0 as u64], bool, {
-  result ~bool = 1 == 1;
-  @if[i < (@sizeof(@typeof(a)) as u64), {
-    pa ~~ (@where a) as @ptr(@arr[0, u8]);
-    pb ~~ (@where b) as @ptr(@arr[0, u8]);
-    result = @get[@at(pa), i] == @get[@at(pb), i];
-    @if[result, @recur[a, b, i + (1 as u64)]];
-  }];
-  result
+memeq ~~ @fn[[a ~@refT(any), b ~@refT(@typeof(a))], bool, {
+  pa ~~ (@where a) as @ptr(@arr[0, u8]);
+  pb ~~ (@where b) as @ptr(@arr[0, u8]);
+  i ~u64 = 0 as u64;
+  @loop @if[i < (@sizeof(@typeof(a)) as u64),
+    @if[@get[@at(pa), i] == @get[@at(pb), i], { i = i + (1 as u64); @repeat() }, 0 == 1],
+    1 == 1]
 }];
 A ~~ @arr[2, u8];
 a ~A = ([1 as u8, 2 as u8] as A);

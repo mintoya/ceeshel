@@ -1,0 +1,12 @@
+// A defer in the loop body runs at the end of every pass, the last one included.
+i32 ~~ @sint();
+count ~~ @fn[[n ~i32, log ~@refT(i32)], i32, {
+  m ~i32 = n;
+  @loop {
+    @defer(log = log + (1 as i32));
+    @if[m > (0 as i32), { m = m - (1 as i32); @repeat() }, m]
+  }
+}];
+log ~i32 = 0 as i32;
+r ~~ count(3 as i32, log);
+(r == (0 as i32)) and (log == (4 as i32))

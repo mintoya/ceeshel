@@ -43,17 +43,15 @@ pub const builtins = enum(u8) {
     returntype, // @returntype() the enclosing function's return type
     // control flow
     @"if", //     @if[c, then, else] else optional; yields nothing; a known c lowers only the taken branch
-    loop, //      @loop(body) repeats body until @break()
-    @"break", //  @break() leaves the loop, running what the scopes on the way out deferred
-    @"continue", // @continue() the next pass of the loop, the same way
-    cwhile, //    @cwhile[c, body] expands body while the known c holds, checked before each whole pass
+    loop, //      @loop(body) runs body; a pass ending in @repeat() runs it again, otherwise the loop yields the body's value
+    repeat, //    @repeat() only in tail position of a @loop body: the pass ends (its scopes run their defers) and the next begins
     @"defer", //  @defer(x) runs x when the scope ends
     yielded, //   @yielded() in deferred code, the value its scope yielded, not the actual value it's about to yield
     // places
     where, //     @where x address of the place x; of a reference, a pointer to its target
     at, //        @at p the place pointer p points to
     ref, //       @ref(x) x as a reference
-    alloc, //     @alloc[T] allocate uninitialized compile-time storage for one T; returns @ptr(T)
+    alloc, //     @alloc[T] allocate zeroed out compile-time storage for one T; returns @comptime(@ptr(T))
     free, //      @free[V] release storage returned by @alloc; yields void
     // ast metaprogramming
     len, //       @len[x] children of an AST, length of an array or a tuple

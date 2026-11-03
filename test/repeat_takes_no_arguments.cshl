@@ -1,0 +1,2 @@
+// error: ARG_COUNT
+@loop @repeat(1)

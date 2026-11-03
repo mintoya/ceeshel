@@ -1,35 +1,35 @@
 @using @import @path "fn.cshl";
 @using @import @path "types.cshl";
-Ast ~~ @import @path "ast.cshl";
 match_ast ~~ [a ~ast] <<fn>> ast {
   @if[@len(a) != 2, @compileError("expected match(item, [arms])")];
   list ~~ @get[a, 1];
   @if[@ast_stringeq(@get[list, 0], "[]") == (0 == 1), @compileError("expected [] block")];
   src ~~ @gensym(src);
   fallback ~ast = '@compileError("match needs an else arm");
-  @fn[[i ~int], void, @if[i < @len(list), {
+  i ~int = 1;
+  @loop @if[i < @len(list), {
     arm ~~ @get[list, i];
     @if[@ast_stringeq(@get[arm, 0], "|>") == (0 == 1), @compileError("expected |> in match arm")];
     @if[@ast_stringeq(@get[arm, 1], "else"), fallback = @get[arm, 2]];
-    @recur[i + 1];
-  }]](1);
-  body ~~ @fn[[i ~int, rest ~ast], ast, {
-    @if[i > 0, {
-      arm ~~ @get[list, i];
-      next ~ast = rest;
-      @if[@ast_stringeq(@get[arm, 1], "else") == (0 == 1), {
-        out ~~ @gensym(result);
-        next = '{
-          `out ~@typeof(`fallback);
-          @if[`src == `(@get[arm, 1]), `out = `(@get[arm, 2]), `out = `rest];
-          `out
-        };
-      }];
-      @recur[i - 1, `next];
+    i = i + 1;
+    @repeat()
+  }];
+  i = @len(list) - 1;
+  rest ~ast = fallback;
+  @loop @if[i > 0, {
+    arm ~~ @get[list, i];
+    @if[@ast_stringeq(@get[arm, 1], "else") == (0 == 1), {
+      out ~~ @gensym(result);
+      rest = '{
+        `out ~@typeof(`fallback);
+        @if[`src == `(@get[arm, 1]), `out = `(@get[arm, 2]), `out = `rest];
+        `out
+      };
     }];
-    rest
-  }](@len(list) - 1, `fallback);
-  '{ `src ~~ `(@get[a, 0]); `body }
+    i = i - 1;
+    @repeat()
+  }];
+  '{ `src ~~ `(@get[a, 0]); `rest }
 };
 @struct{
   match_ast ~~ match_ast;

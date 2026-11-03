@@ -1,14 +1,15 @@
-// Build a pointer field for each source field using compile-time recurrence.
+// Build a pointer field for each source field using a compile-time loop.
 i32 ~~ @sint(); u8 ~~ @uint(); int ~~ @int(); ast ~~ @ast(); type ~~ @type();
 Ptrs ~~ @fn[[T ~type], type, {
   x ~@comptime(T);
-  fields ~~ @fn[[i ~int, fields ~ast], ast, {
-    @if[i < @countof(T), {
-      name ~~ @fieldname(T, i);
-      @recur[i + 1, `('{ ..`(@get[fields, 1, @len[fields]]); `name ~@ptr(@typeof(x.`name)); })];
-    }];
-    fields
-  }](0, {});
+  i ~int = 0;
+  fields ~ast = '{};
+  @loop @if[i < @countof(T), {
+    name ~~ @fieldname(T, i);
+    fields = '{ ..`(@get[fields, 1, @len[fields]]); `name ~@ptr(@typeof(x.`name)); };
+    i = i + 1;
+    @repeat()
+  }];
   @struct `fields
 }];
 P ~~ @struct{ a ~i32; b ~u8; };

@@ -1,0 +1,9 @@
+// error: REPEAT_NOT_TAIL
+// @repeat must be the last thing a pass does; code after it would make it continue.
+i32 ~~ @sint();
+n ~i32 = 3 as i32;
+@loop {
+  @if[n > (0 as i32), @repeat()];
+  n = n - (1 as i32)
+};
+n == (0 as i32)

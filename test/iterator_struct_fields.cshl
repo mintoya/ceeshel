@@ -9,20 +9,11 @@ struct_fields( @struct {
   j ~int~ 5;
   k ~int~ 8;
   l ~int~ 3;
-}) |> each [t ~@type()] <<fn>> void {
-  @log t.name;
-  @log t.type;
-  @log t.val;
-  x = x + t.val;
+}) |> each {
+  @log _.name;
+  @log _.type;
+  @log _.val;
+  x = x + _.val;
 };
-
-struct_fields(
-  @import @path "lib/iterator.cshl"
-) |> each [t ~@type()] <<fn>> void {
-  @log t.name;
-  @log t.type;
-  @log t.val;
-};
-
 
 x == (2 + 5 + 8 + 3)

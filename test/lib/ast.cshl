@@ -1,36 +1,47 @@
-ast ~~ @ast(); any ~~ @any(); bool ~~ @bool();
+@using @import @path "types.cshl";
+@using @import @path "fn.cshl";
 
-is ~~ @fn[[x ~ast, name ~any], bool,
-  @ast_stringeq(@get[x, 0], name)];
-
-items ~~ @fn[[x ~ast], ast, @get[x, 1, @len[x]]];
-
-is_list  ~~ @fn[[x ~ast], bool, is[`x, "[]"]];
-is_block ~~ @fn[[x ~ast], bool, is[`x, "{}"]];
-
-is_decl ~~ @fn[[x ~ast], bool, is[`x, "~"] or is[`x, "~="] or is[`x, "~~"]];
-decl_name ~~ @fn[[x ~ast], ast, @get[x, 1]];
-
-decl_type ~~ @fn[[x ~ast], ast, {
-  r ~ast;
-  @if[is[`x, "~"] or (@len[x] == 4),
-    r = @get[x, 2]];
-  r
-}];
-
-decl_value ~~ @fn[[x ~ast], ast, @get[x, 3]];
-
-prepend ~~ @fn[[a ~ast,x ~ast],ast,{
-  items[`('[`a,..`x])]
-}];
-append ~~ @fn[[a ~ast,x ~ast],ast,{
-  items[`('[..`x,`a])]
-}];
-
+remove_first ~~ [a ~ast] <<fn>> ast 
+  @get[a,1,@len(a)];
+remove_last  ~~ [a ~ast] <<fn>> ast @get[a,0,@len(a) - 1];
+pop_first ~~ [a ~@refT(ast)] <<fn>> ast {
+  result ~~ @get[a,0];
+  a = remove_first[`a];
+  result 
+};
+pop_last  ~~ [a ~@refT(ast)] <<fn>> ast {
+  result ~~ @get[a,@len(a)-1];
+  a = remove_last[`a];
+  result 
+};
+push_first ~~ [a ~ast,b ~ast] <<fn>> ast {
+  result ~= '[`b,..`a];
+  pop_first(result);  // ([] `b,...)
+  result
+};
+push_last ~~ [a ~ast,b ~ast] <<fn>> ast {
+  result ~= '[..`a,`b];
+  pop_first(result);  // ([] `b,...)
+  result
+};
+// whether x is a call headed name
+is ~~ [x ~ast, name ~any] <<fn>> bool @ast_stringeq(@get[x, 0], name);
+// a call's arguments, without its head
+items ~~ [x ~ast] <<fn>> ast @get[x, 1, @len[x]];
+is_list  ~~ [x ~ast] <<fn>> bool is[`x, "[]"];
+is_block ~~ [x ~ast] <<fn>> bool is[`x, "{}"];
+// a declaration is (~ name T value mark): x ~T = v, x ~~ v, x ~T
+is_decl ~~ [x ~ast] <<fn>> bool is[`x, "~"] and (@len[x] == 5);
+decl_name  ~~ [x ~ast] <<fn>> ast @get[x, 1];
+decl_type  ~~ [x ~ast] <<fn>> ast @get[x, 2];
+decl_value ~~ [x ~ast] <<fn>> ast @get[x, 3];
 @struct{
+  remove_first ~~ remove_first;
+  remove_last ~~ remove_last;
+  pop_first ~~ pop_first;
+  pop_last ~~ pop_last;
+  push_first ~~ push_first;
   is ~~ is;
-  prepend ~~ prepend;
-  append ~~ append;
   items ~~ items;
   is_list ~~ is_list;
   is_block ~~ is_block;

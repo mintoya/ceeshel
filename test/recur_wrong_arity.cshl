@@ -1,3 +1,0 @@
-// error: ARG_COUNT
-f ~~ @fn[[x ~@sint()], @sint(), @recur[]];
-f(1 as @sint())

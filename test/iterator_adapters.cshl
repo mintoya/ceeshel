@@ -12,10 +12,10 @@ sum_to ~~ [n ~i32] <<fn>> @struct{
     |> map _ * (k as i32)
     |> filter (_ % (3 as i32)) == (0 as i32)
     |> until _ > (14 as i32)
-    |> each [value ~i32] <<closure [result]>> void {
-      result.sum = result.sum + value;
-      result.count = result.count + (1 as i32);
-    };
+  |> each {
+    result.sum = result.sum + (_ as i32);
+    result.count = result.count + (1 as i32);
+  };
   result
 };
 sum_to(10 as i32) |>

@@ -6,7 +6,9 @@ Ast ~~  @import @path "ast.cshl";
 // @if yields nothing, so the choice is made by returning an AST
 pick ~~ [c ~bool, yes ~ast, no ~ast] <<fn>> inline { r ~ast = no; @if[c, r = yes]; r };
 @id(".") ~~ [right ~ast, left ~ast] <<fn>> inline
-  'pick[@compiles((`right):__dot(`left)), (`right):__dot(`left), @raw((`right).`left)];
+  'pick[@compiles((`right):__dot(`left)),
+    (`right):__dot(`left),
+    @raw((`right).`left)];
 
 // storage for any of Types' members: as big as the biggest, made of the
 // most aligned one so it is aligned like it
@@ -14,12 +16,13 @@ storage ~~ [Types ~type] <<fn>> type @raw({
   size ~int = 0;
   Big ~type = @uchar();
   i ~int = 0;
-  @fn[[i ~@int()], @void(), @if[i < @countof(Types), {
+  @loop @if[i < @countof(Types), {
     T ~~ Types.`(@fieldname(Types, i));
     @if[@sizeof(T) > size, size = @sizeof(T)];
     @if[@alignof(T) > @alignof(Big), Big = T];
-    @recur[i + 1];
-  }]](i);
+    i = i + 1;
+    @repeat()
+  }];
   @arr[(size + @sizeof(Big) - 1) / @sizeof(Big), Big]
 });
 
@@ -35,12 +38,13 @@ union_of ~~ [Types ~type] <<fn>> type @struct{
 union ~~ [args ~ast] <<fn>> inline {
   types ~ast = '{};
   i ~int = 1;
-  @fn[[i ~@int()], @void(), @if[i < @len[args], {
+  @loop @if[i < @len[args], {
     d ~~ @get[args, i];
     t ~ast = '(`(Ast.decl_name(`d)) ~~ `(Ast.decl_type(`d)));
     types = '{ ..`(@get[types, 1, @len[types]]); `t; };
-    @recur[i + 1];
-  }]](i);
+    i = i + 1;
+    @repeat()
+  }];
   '(union_of(@struct `types))
 };
 

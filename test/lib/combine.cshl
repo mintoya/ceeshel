@@ -8,23 +8,25 @@ combine ~~ [a~type,b~type] <<fn>> type {
   bv ~@comptime(b);
   fields ~= '{};
   i~int=0;
-  @fn[[i ~@int()], @void(), @if[i < @countof(a), {
+  @loop @if[i < @countof(a), {
     n ~ast~ @fieldname(a,i);
     ra ~ast~ @if[@isconst(av.`n),
       '(`n ~@typeof(av.`n)~ av.`n),
       '(`n ~@typeof(av.`n))];
     fields = '{..`(@get[fields,1,@len(fields)]);`ra;};
-    @recur[i + 1];
-  }]](i);
+    i = i + 1;
+    @repeat()
+  }];
   i = 0;
-  @fn[[i ~@int()], @void(), @if[i < @countof(b), {
+  @loop @if[i < @countof(b), {
     n ~ast~ @fieldname(b,i);
     ra ~ast~ @if[@isconst(bv.`n),
       '(`n ~@typeof(bv.`n)~ bv.`n),
       '(`n ~@typeof(bv.`n))];
     fields = '{..`(@get[fields,1,@len(fields)]);`ra;};
-    @recur[i + 1];
-  }]](i);
+    i = i + 1;
+    @repeat()
+  }];
   @struct `fields
 };
 @struct{

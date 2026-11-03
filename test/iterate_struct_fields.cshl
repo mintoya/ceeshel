@@ -1,12 +1,15 @@
 // Generate field accesses at compile time, then evaluate them at runtime.
 i32 ~~ @sint(); int ~~ @int(); ast ~~ @ast();
 P ~~ @struct{ a ~i32; b ~i32; c ~i32; };
-sum_fields ~~ @fn[[p ~ast, T ~@type(), i ~int = 0, total ~ast = (0 as i32)], @inlineast(), {
-  @if[i < @countof(T), {
+sum_fields ~~ @fn[[p ~ast, T ~@type()], @inlineast(), {
+  i ~int = 0;
+  total ~ast = '(0 as i32);
+  @loop @if[i < @countof(T), {
     name ~~ @fieldname(T, i);
-    @recur[`p, T, i + 1, `('(`total + (`p).`name))];
-  }];
-  total
+    total = '(`total + (`p).`name);
+    i = i + 1;
+    @repeat()
+  }, total]
 }];
 sum ~~ @fn[[p ~P], i32, sum_fields(p, P)];
 sum([1 as i32, 2 as i32, 3 as i32] as P) == (6 as i32)

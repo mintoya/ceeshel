@@ -1,0 +1,15 @@
+// Explicit arrays are passed as one argument; a loop carries the iteration state.
+i32 ~~ @sint(); index ~~ @uint();
+sum ~~ @fn[[xs ~@any()], i32, {
+  a ~@typeof(xs) = xs;
+  i ~index = 0 as index;
+  total ~i32 = 0 as i32;
+  @loop @if[i < (@len[a] as index), {
+    total = total + @get[a, i];
+    i = i + (1 as index);
+    @repeat()
+  }, total]
+}];
+a ~i32 = 4 as i32;
+(sum([1 as i32, 2 as i32, a] as @arr[3, i32]) == (7 as i32))
+  and (sum([a, a] as @arr[2, i32]) == (8 as i32))

@@ -21,20 +21,21 @@ range ~~ [start ~any, end ~@typeof(start)] <<fn>> any {
   [start, end] as R
 };
 
-struct_fields ~~ [T ~type] <<fn>> any ([] as @struct{
+struct_fields ~~ [T ~type] <<fn>> @comptime(any) ([] as @struct{
   Self ~~ @this();
-  at ~int= 0;
+  at ~i32= 0 as i32;
 
   next ~~ [self ~@refT(Self)] <<fn>> ?(type) {
-    @if[self.at >= @countof(T),
+    @if[self.at >= (@countof(T) as @comptime(i32)),
       null as (?(type)),
       {
+        idx ~@comptime(i32)~ self.at;
         field ~~ @struct {
-          name ~~ @fieldname(T, self.at);
-          type ~~ @fieldtype(T, self.at);
-          val  ~~ @fieldval(T, self.at);
+          name ~~ @fieldname(T, idx as int);
+          type ~~ @fieldtype(T, idx as int);
+          val  ~~ @fieldval(T, idx as int);
         };
-        self.at = self.at + 1;
+        self.at = idx + 1;
         field as (? type)
       }]
   };
@@ -62,9 +63,10 @@ filter_on ~~ [inner ~any, f ~any] <<fn>> any {
     Self ~~ @this();
     inner ~Inner;
     next ~~ [self ~@refT(Self)] <<fn>> @typeof((@fn[[it ~@refT(Inner)], @any(), it:next()])(self.inner)) {
-      x ~= self.inner:next();
-      @if[x.present, @if[f(x.value) == (0 == 1), @recur[self]]];
-      x
+      @loop {
+        x ~= self.inner:next();
+        @if[x.present, @if[f(x.value), x, @repeat()], x]
+      }
     };
   };
   [inner] as M
@@ -90,16 +92,22 @@ until_on ~~ [inner ~any, f ~any] <<fn>> any {
 };
 until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @bool(), `body]));
 
-each_on ~~ [inner ~any, f ~any] <<fn>> void {
-  it ~@typeof(inner) = inner;
-  callback ~@typeof(f) = f;
-  x ~= it:next();
-  @if[x.present, {
-    callback(x.value);
-    @recur[it, callback];
-  }];
+// it |> each body: body runs for every element, as _, where each is written:
+// it sees and changes the caller's variables
+each ~~ [body ~ast] <<fn>> inline {
+  it ~~ @gensym(it);
+  x ~~ @gensym(x);
+  '{
+    `it ~= _;
+    @loop {
+      `x ~= (`it):next();
+      @if[(`x).present, {
+        (`x).value |> `body;
+        @repeat()
+      }]
+    };
+  }
 };
-each ~~ [callback ~ast] <<fn>> inline '(each_on(_, `callback));
 
 @struct{
   range ~~ range;
@@ -110,6 +118,5 @@ each ~~ [callback ~ast] <<fn>> inline '(each_on(_, `callback));
   until ~~ until;
   until_on ~~ until_on;
   each ~~ each;
-  each_on ~~ each_on;
   struct_fields ~~ struct_fields;
 }

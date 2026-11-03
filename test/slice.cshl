@@ -8,5 +8,5 @@ s:get(0 as u64) = 10 as i32;
 t ~= s:sub(1 as u64, 4 as u64);
 t:get(2 as u64) = 40 as i32;
 sum ~i32 = 0 as i32;
-t:iter() |> each (([value ~i32] <<closure [sum]>> void { sum = sum + value; }));
+t:iter() |> each { sum = sum + _; };
 (@get[a, 0] == (10 as i32)) and (@get[a, 3] == (40 as i32)) and (t.len == (3 as u64)) and (sum == (45 as i32))

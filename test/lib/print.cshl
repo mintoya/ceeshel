@@ -23,12 +23,12 @@ fmt_int ~~ [ctx ~fmt_ctx, v ~i64] <<fn>> @void() {
   m ~u64;
   @if[v < (0 as i64), m = (((0 as i64) - (v + (1 as i64))) as u64) + (1 as u64), m = v as u64];
   j ~u64 = 20 as u64;
-  j = @fn[[buf ~@refT(@arr[20, i8]), m ~u64, j ~u64], u64, {
-    next ~u64 = j - (1 as u64);
-    @get[buf, next] = @get["0", 0] + ((m % (10 as u64)) as i8);
-    @if[m >= (10 as u64), @recur[buf, m / (10 as u64), next]];
-    next
-  }](buf, m, j);
+  @loop {
+    j = j - (1 as u64);
+    @get[buf, j] = @get["0", 0] + ((m % (10 as u64)) as i8);
+    m = m / (10 as u64);
+    @if[m > (0 as u64), @repeat()]
+  };
   @if[v < (0 as i64), {
     j = j - (1 as u64);
     @get[buf, j] = @get["-", 0];
@@ -84,7 +84,7 @@ fmt ~~ [ctx ~ast, a ~ast] <<fn>> inline
   '(fmt_r(`ctx, `(@get[a, 1]), [..`(@get[a, 2, @len[a]])]));
 
 putc ~~ [c ~i8] <<fn>> @void() @cexpr[@void(), "putchar(c)"];
-stdout ~~ [ctx ~@ptr(@void()), msg ~slice(i8)] <<fn>> @void() (msg:iter() |> each(putc));
+stdout ~~ [ctx ~@ptr(@void()), msg ~slice(i8)] <<fn>> @void() (msg:iter() |> each { putc(_) });
 cfmt ~~ [] <<fn>> fmt_ctx {
   r ~fmt_ctx;
   r.out = stdout as @typeof(r.out);

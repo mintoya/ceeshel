@@ -4,7 +4,7 @@ if ~~ [a ~ast] <<fn>> inline {
   cnd ~~ @get[a,0];
   @if[not @ast_stringeq(@get[@get[a,1],0] , "[]"),
     @compileError "expected a block"];
-  arm ~~ Ast.items[`(@get[a,1])];
+  arm  ~~ Ast.remove_first[`@get[a,1]];
   then ~~ @get[arm,0];
   else ~~ @get[arm,1];
   '@if[`cnd,`then,`else]

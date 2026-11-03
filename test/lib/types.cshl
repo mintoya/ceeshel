@@ -8,6 +8,14 @@
 
   void    ~~ @void();
   bool    ~~ @bool();
+  sc      ~~ @schar();
+  ss      ~~ @sshort();
+  si      ~~ @sint();
+  sl      ~~ @slong();
+  uc      ~~ @uchar();
+  us      ~~ @sshort();
+  ui      ~~ @sint();
+  ul      ~~ @slong();
   i8      ~~ @schar();
   i16     ~~ @sshort();
   i32     ~~ @sint();

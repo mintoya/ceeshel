@@ -1,0 +1,15 @@
+// A runtime loop is one frame however many passes it makes: 10001 swaps.
+i32 ~~ @sint();
+swap ~~ @fn[[n ~i32, a ~i32, b ~i32], i32, {
+  i ~i32 = n;
+  x ~i32 = a;
+  y ~i32 = b;
+  @loop @if[i > (0 as i32), {
+    t ~i32 = x;
+    x = y;
+    y = t;
+    i = i - (1 as i32);
+    @repeat()
+  }, x]
+}];
+swap(10001 as i32, 2 as i32, 7 as i32) == (7 as i32)

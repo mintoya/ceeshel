@@ -1,0 +1,11 @@
+// Compile-time iteration uses the same loop.
+steps ~= 0;
+sum ~~ @fn[[n ~@int()], @int(), {
+  i ~= n;
+  total ~= 0;
+  @loop {
+    @defer(steps = steps + 1);
+    @if[i > 0, { total = total + i; i = i - 1; @repeat() }, total]
+  }
+}];
+(sum(100) == 5050) and (steps == 101)
