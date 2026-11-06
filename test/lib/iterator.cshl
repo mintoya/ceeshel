@@ -41,56 +41,63 @@ struct_fields ~~ [T ~type] <<fn>> @comptime(any) ([] as @struct{
   };
 });
 
-map_on ~~ [inner ~any, f ~any] <<fn>> any {
-  Inner ~~ @typeof(inner);
-  M ~~ @struct{
-    Self ~~ @this();
-    inner ~Inner;
-    next ~~ [self ~@refT(Self)] <<fn>> any {
-      x ~= self.inner:next();
-      r ~?(@typeof(f(x.value))) = null;
-      @if[x.present, r = f(x.value)];
-      r
-    };
-  };
-  [inner] as M
-};
-map ~~ [body ~ast] <<fn>> inline '(map_on(_, @fn[[_ ~@any()], @any(), `body]));
-
-filter_on ~~ [inner ~any, f ~any] <<fn>> any {
-  Inner ~~ @typeof(inner);
-  M ~~ @struct{
-    Self ~~ @this();
-    inner ~Inner;
-    next ~~ [self ~@refT(Self)] <<fn>> @typeof((@fn[[it ~@refT(Inner)], @any(), it:next()])(self.inner)) {
-      @loop {
-        x ~= self.inner:next();
-        @if[x.present, @if[f(x.value), x, @repeat()], x]
-      }
-    };
-  };
-  [inner] as M
-};
-filter ~~ [body ~ast] <<fn>> inline '(filter_on(_, @fn[[_ ~@any()], @bool(), `body]));
-
-until_on ~~ [inner ~any, f ~any] <<fn>> any {
-  Inner ~~ @typeof(inner);
-  M ~~ @struct{
-    Self ~~ @this();
-    inner ~Inner;
-    done ~bool;
-    next ~~ [self ~@refT(Self)] <<fn>> any {
-      x ~@typeof(self.inner:next()) = null;
-      @if[self.done == (0 == 1), {
-        x = self.inner:next();
-        @if[x.present, @if[f(x.value), { self.done = 0 == 0; x = null; }]];
+// it |> map body, filter body, until body: iterators whose next is inline,
+// so the body is expanded where next is called, in the caller's function,
+// and sees the caller's variables. _ is the element inside the body.
+// map: the elements through body.
+map ~~ [body ~ast] <<fn>> inline {
+  M ~~ @gensym(M); x ~~ @gensym(x); r ~~ @gensym(r);
+  '{
+    `M ~~ @struct{
+      inner ~@typeof(_);
+      next ~~ @fn[[self ~@ast()], @inlineast(), '{
+        `x ~= (\`self).inner:next();
+        _ ~= (`x).value;
+        `r ~_optional(@typeof(`body)) = _null;
+        @if[(`x).present, `r = `body];
+        `r
       }];
-      x
     };
-  };
-  [inner, 0 == 1] as M
+    [_] as `M
+  }
 };
-until ~~ [body ~ast] <<fn>> inline '(until_on(_, @fn[[_ ~@any()], @bool(), `body]));
+
+// filter: only the elements for which body is true
+filter ~~ [body ~ast] <<fn>> inline {
+  M ~~ @gensym(M); x ~~ @gensym(x);
+  '{
+    `M ~~ @struct{
+      inner ~@typeof(_);
+      next ~~ @fn[[self ~@ast()], @inlineast(), '(@loop {
+        `x ~= (\`self).inner:next();
+        _ ~= (`x).value;
+        @if[(`x).present, @if[`body, `x, @repeat()], `x]
+      })];
+    };
+    [_] as `M
+  }
+};
+
+// until: the elements before the first for which body is true
+until ~~ [body ~ast] <<fn>> inline {
+  M ~~ @gensym(M); x ~~ @gensym(x);
+  '{
+    `M ~~ @struct{
+      inner ~@typeof(_);
+      done ~@bool();
+      next ~~ @fn[[self ~@ast()], @inlineast(), '{
+        `x ~@typeof((\`self).inner:next()) = _null;
+        @if[(\`self).done == (0 == 1), {
+          `x = (\`self).inner:next();
+          _ ~= (`x).value;
+          @if[(`x).present, @if[`body, { (\`self).done = 0 == 0; `x = _null; }]];
+        }];
+        `x
+      }];
+    };
+    [_, 0 == 1] as `M
+  }
+};
 
 // it |> each body: body runs for every element, as _, where each is written:
 // it sees and changes the caller's variables
@@ -112,11 +119,11 @@ each ~~ [body ~ast] <<fn>> inline {
 @struct{
   range ~~ range;
   map ~~ map;
-  map_on ~~ map_on;
   filter ~~ filter;
-  filter_on ~~ filter_on;
   until ~~ until;
-  until_on ~~ until_on;
   each ~~ each;
   struct_fields ~~ struct_fields;
+  // what the adapters' expansions use, wherever they are expanded
+  _optional ~~ ?;
+  _null ~~ null;
 }

@@ -13,9 +13,9 @@
   si      ~~ @sint();
   sl      ~~ @slong();
   uc      ~~ @uchar();
-  us      ~~ @sshort();
-  ui      ~~ @sint();
-  ul      ~~ @slong();
+  us      ~~ @ushort();
+  ui      ~~ @uint();
+  ul      ~~ @ulong();
   i8      ~~ @schar();
   i16     ~~ @sshort();
   i32     ~~ @sint();
